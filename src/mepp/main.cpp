@@ -27,6 +27,9 @@
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 
 
+#include <ImporterCGAL.h>
+
+
 #include <QApplication>
 #include <QtGui>
 //Q_IMPORT_PLUGIN(qjpeg)
@@ -75,7 +78,7 @@ typedef OpenMesh::PolyMesh_ArrayKernelT<MyTraits2>	MyMesh2;
 
 template <typename M>
 bool 
-open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
+open_mesh( const char* _filename, OpenMesh::IO::Options _opt )
 {
 	M mesh_;
 	OpenMesh::IO::Options opt_; // mesh file options
@@ -201,6 +204,9 @@ int main(int argc, char *argv[])
 
 	open_texture<MyMesh>("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
 	open_texture<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
+
+	OpenMesh::IO::ImporterCGAL/*<Mesh>*/ importer/*(_mesh)*/;
+	/*return */OpenMesh::IO::IOManager().read("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", importer, opt); 
 
     return app.exec();
 }
