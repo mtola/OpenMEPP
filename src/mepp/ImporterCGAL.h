@@ -31,18 +31,22 @@ public:
 
 
   //ImporterCGAL(Mesh& _mesh) : mesh_(_mesh) {}
+  ImporterCGAL()
+  {
+	  vertices_ = faces_ = 0;
+  }
 
 
   virtual VertexHandle add_vertex(const Vec3f& _point)
   {
 	//std::cout << "---> add_vertex\n";
-	return VertexHandle();
+	return VertexHandle(vertices_++);
   }
 
   virtual FaceHandle add_face(const VHandles& _indices)
   {
 	//std::cout << "---> add_face\n";
-	return FaceHandle();
+	return FaceHandle(faces_++);
   }
 
   // vertex attributes
@@ -101,13 +105,15 @@ public:
   }
 
   // query number of faces, vertices, normals, texcoords
-  size_t n_vertices()  const { return 0;/*mesh_.n_vertices();*/ }
-  size_t n_faces()     const { return 0;/*mesh_.n_faces();*/ }
+  size_t n_vertices()  const { return vertices_;/*mesh_.n_vertices();*/ }
+  size_t n_faces()     const { return faces_;/*mesh_.n_faces();*/ }
   size_t n_edges()     const { return 0;/*mesh_.n_edges();*/ }
 
 private:
 
-  //Mesh& mesh_;
+	//Mesh& mesh_;
+	int vertices_;
+	int faces_;
 };
 
 //=============================================================================

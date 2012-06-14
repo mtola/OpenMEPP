@@ -206,7 +206,11 @@ int main(int argc, char *argv[])
 	open_texture<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
 
 	OpenMesh::IO::ImporterCGAL/*<Mesh>*/ importer/*(_mesh)*/;
-	/*return */OpenMesh::IO::IOManager().read("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", importer, opt); 
+	std::cout << "--> Loading with ImporterCGAL\n";
+	if ( OpenMesh::IO::IOManager().read("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", importer, opt) )
+		std::cout << "--> Loading done (vertices: " << importer.n_vertices() << " - faces: " << importer.n_faces() << ")\n\n";
+	else
+		std::cout << "--> Loading NOT done!\n\n";
 
     return app.exec();
 }
