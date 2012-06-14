@@ -24,6 +24,8 @@
 #include <OpenMesh/Core/IO/Options.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
+#include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
+
 
 #include <QApplication>
 #include <QtGui>
@@ -48,13 +50,34 @@ struct MyTraits : public OpenMesh::DefaultTraits
 {
 	HalfedgeAttributes(OpenMesh::Attributes::PrevHalfedge);
 };
-
 typedef OpenMesh::TriMesh_ArrayKernelT<MyTraits>	MyMesh;
 
-
-bool open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
+// Define my personal traits
+struct MyTraits2 : OpenMesh::DefaultTraits
 {
-	MyMesh mesh_;
+  // Let Point and Normal be a vector of doubles
+  typedef OpenMesh::Vec3d Point;
+  typedef OpenMesh::Vec3d Normal;
+
+  // Already defined in OpenMesh::DefaultTraits
+  // HalfedgeAttributes( OpenMesh::Attributes::PrevHalfedge );
+  
+  // Uncomment next line to disable attribute PrevHalfedge
+  // HalfedgeAttributes( OpenMesh::Attributes::None );
+  //
+  // or
+  //
+  HalfedgeAttributes( 0 );
+};
+// Define my mesh with the new traits!
+typedef OpenMesh::PolyMesh_ArrayKernelT<MyTraits2>	MyMesh2;
+
+
+template <typename M>
+bool 
+open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
+{
+	M mesh_;
 	OpenMesh::IO::Options opt_; // mesh file options
 
   // load mesh
@@ -66,7 +89,7 @@ bool open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
   mesh_.request_vertex_colors();
   mesh_.request_vertex_texcoords2D();
   
-  std::cout << "Loading mesh from file '" << _filename << "'\n";
+  std::cout << "--> Loading mesh from file '" << _filename << "'\n";
   if ( OpenMesh::IO::read_mesh(mesh_, _filename, _opt ))
   {
     // store read option
@@ -106,24 +129,27 @@ bool open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
       std::cout << "File provides texture coordinates\n";
 
     // loading done
-	std::cout << "Loading done\n";
+	std::cout << "--> Loading done\n\n";
     return true;
   }
+  std::cout << "--> Loading NOT done!\n\n";
   return false;
 }
 
+template <typename M>
 bool open_texture( const char *_filename )
 {
    QImage texsrc;
    QString fname = _filename;
 
-   std::cout << "Loading texture from file '" << _filename << "'\n";
+   std::cout << "--> Loading texture from file '" << _filename << "'\n";
    if (texsrc.load( fname ))
    {
-		std::cout << "Loading done\n";
+		std::cout << "--> Loading done\n\n";
 		return true;
 		//return set_texture( texsrc );
    }
+   std::cout << "--> Loading NOT done!\n\n";
    return false;
 }
 
@@ -170,10 +196,11 @@ int main(int argc, char *argv[])
 	window.show();
 
 	OpenMesh::IO::Options opt;
-	open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt);
-	open_mesh("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt);
-	open_texture("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
-	open_texture("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
+	open_mesh<MyMesh>("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt);
+	open_mesh<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt);
+
+	open_texture<MyMesh>("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
+	open_texture<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
 
     return app.exec();
 }
