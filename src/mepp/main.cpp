@@ -28,6 +28,7 @@
 
 
 #include <ImporterCGAL.h>
+#include <ExporterCGAL.h>
 
 
 #include <QApplication>
@@ -211,6 +212,13 @@ int main(int argc, char *argv[])
 		std::cout << "--> Loading done (vertices: " << importer.n_vertices() << " - faces: " << importer.n_faces() << ")\n\n";
 	else
 		std::cout << "--> Loading NOT done!\n\n";
+
+	OpenMesh::IO::ExporterCGAL/*<Mesh>*/ exporter/*(_mesh)*/;
+	std::cout << "--> Writing with ExporterCGAL\n";
+	if ( OpenMesh::IO::IOManager().write("C:\\Users\\noname\\Desktop\\face_written.obj", exporter, opt) )
+		std::cout << "--> Writing done (vertices: " << exporter.n_vertices() << " - faces: " << exporter.n_faces() << ")\n\n";
+	else
+		std::cout << "--> Writing NOT done!\n\n";
 
     return app.exec();
 }

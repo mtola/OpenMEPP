@@ -12,7 +12,7 @@
 #include <OpenMesh/Core/IO/importer/BaseImporter.hh>
 
 
-//== NAMESPACES ===============================================================
+//=== NAMESPACES ==============================================================
 namespace OpenMesh {
 namespace IO {
 
@@ -30,6 +30,7 @@ public:
   typedef std::vector<VertexHandle>  VHandles;
 
 
+  // Constructor
   //ImporterCGAL(Mesh& _mesh) : mesh_(_mesh) {}
   ImporterCGAL()
   {
