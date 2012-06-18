@@ -22,9 +22,8 @@
 
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/IO/Options.hh>
-#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
-
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
+//#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
 #include <ImporterCGAL.h>
 #include <ExporterCGAL.h>
@@ -32,6 +31,8 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
+
+#include <OpenMesh/Core/IO/importer/ImporterT.hh>
 
 
 #include <QApplication>
@@ -240,6 +241,67 @@ private:
   Mesh& mesh_;
 };
 
+template <class Mesh, class P>
+class Build_mesh
+{
+public:
+    Build_mesh(P& _p) : p_(_p) {}
+
+    void build(Mesh& mesh_)
+	{
+		typedef typename P::Vertex_const_iterator					VCI;
+		typedef typename P::Facet_const_iterator					FCI;
+		typedef typename P::Halfedge_around_facet_const_circulator	HFCC;
+
+		OpenMesh::IO::ImporterT<Mesh> importerOpenMesh(mesh_);
+		importerOpenMesh.reserve(p_.size_of_vertices(), 3*p_.size_of_vertices(), p_.size_of_facets());
+
+		OpenMesh::Vec3f v;
+		OpenMesh::VertexHandle vh;
+
+		OpenMesh::IO::BaseImporter::VHandles vhandles;
+		OpenMesh::FaceHandle fh;
+
+		// output vertices
+		for (VCI vi = p_.vertices_begin(); vi != p_.vertices_end(); ++vi)
+		{
+			v[0] = ::CGAL::to_double(vi->point().x());
+			v[1] = ::CGAL::to_double(vi->point().y());
+			v[2] = ::CGAL::to_double(vi->point().z());
+
+			vh = importerOpenMesh.add_vertex(v);
+		}
+
+		// constructs an inverse index
+		typedef CGAL::Inverse_index<VCI> Index;
+		Index index(p_.vertices_begin(), p_.vertices_end());
+
+		// output facets
+		for (FCI fi = p_.facets_begin(); fi != p_.facets_end(); ++fi)
+		{
+			vhandles.clear(); // OpenMesh
+
+			HFCC hc = fi->facet_begin();
+			HFCC hc_end = hc;
+			std::size_t n = circulator_size(hc);
+			CGAL_assertion(n >= 3);
+
+			// facet begin
+			do
+			{
+				vhandles.push_back(OpenMesh::VertexHandle(index[VCI(hc->vertex())]));
+				++hc;
+			} while (hc != hc_end);
+			// facet end
+
+			fh = importerOpenMesh.add_face(vhandles);
+		}
+    }
+
+private:
+  P& p_;
+};
+
 typedef CGAL::Simple_cartesian<float>		Kernel1;
 typedef CGAL::Polyhedron_3<Kernel1>         Polyhedron1;
 typedef Polyhedron1::HalfedgeDS             HalfedgeDS1;
@@ -280,32 +342,46 @@ int main(int argc, char *argv[])
 	open_texture<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
 
 #if(0)
-	OpenMesh::IO::ImporterCGAL/*<Mesh>*/ importer/*(_mesh)*/;
+	OpenMesh::IO::ImporterCGAL/*<Mesh>*/ importerCGAL/*(_mesh)*/;
 	std::cout << "--> Loading with ImporterCGAL\n";
-	if ( OpenMesh::IO::IOManager().read("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", importer, opt) )
-		std::cout << "--> Loading done (vertices: " << importer.n_vertices() << " - faces: " << importer.n_faces() << ")\n\n";
+	if ( OpenMesh::IO::IOManager().read("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", importerCGAL, opt) )
+		std::cout << "--> Loading done (vertices: " << importerCGAL.n_vertices() << " - faces: " << importerCGAL.n_faces() << ")\n\n";
 	else
 		std::cout << "--> Loading NOT done!\n\n";
 
-	OpenMesh::IO::ExporterCGAL/*<Mesh>*/ exporter/*(_mesh)*/;
+	OpenMesh::IO::ExporterCGAL/*<Mesh>*/ exporterCGAL/*(_mesh)*/;
 	std::cout << "--> Writing with ExporterCGAL\n";
-	if ( OpenMesh::IO::IOManager().write("C:\\Users\\noname\\Desktop\\face_written.obj", exporter, opt) )
-		std::cout << "--> Writing done (vertices: " << exporter.n_vertices() << " - faces: " << exporter.n_faces() << ")\n\n";
+	if ( OpenMesh::IO::IOManager().write("C:\\Users\\noname\\Desktop\\face_written.obj", exporterCGAL, opt) )
+		std::cout << "--> Writing done (vertices: " << exporterCGAL.n_vertices() << " - faces: " << exporterCGAL.n_faces() << ")\n\n";
 	else
 		std::cout << "--> Writing NOT done!\n\n";
 #endif
 
 	std::cout << "--> OpenMeshToCGALConverter\n";
 	Polyhedron1 P1;
-    Build_polyhedron<HalfedgeDS1, MyMesh1> polyhedron1(mesh1);
-    P1.delegate(polyhedron1);
+    Build_polyhedron<HalfedgeDS1, MyMesh1> build_polyhedron1(mesh1);
+    P1.delegate(build_polyhedron1);
 	std::cout << "--> (vertices: " << P1.size_of_vertices() << " - faces: " << P1.size_of_facets() << " - edges: " << (P1.size_of_halfedges() >> 1) << ")\n\n";
 
 	std::cout << "--> OpenMeshToCGALConverter\n";
 	Polyhedron2 P2;
-    Build_polyhedron<HalfedgeDS2, MyMesh2> polyhedron2(mesh2);
-    P2.delegate(polyhedron2);
+    Build_polyhedron<HalfedgeDS2, MyMesh2> build_polyhedron2(mesh2);
+    P2.delegate(build_polyhedron2);
 	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << ")\n\n";
+
+	// ---
+
+	std::cout << "--> CGALToOpenMeshConverter\n";
+	MyMesh1 mesh1b;
+	Build_mesh<MyMesh1, Polyhedron1> build_mesh1b(P1);
+	build_mesh1b.build(mesh1b);
+	std::cout << "--> (vertices: " << mesh1b.n_vertices() << " - faces: " << mesh1b.n_faces() << " - edges: " << mesh1b.n_edges() << ")\n\n";
+
+	std::cout << "--> CGALToOpenMeshConverter\n";
+	MyMesh2 mesh2b;
+	Build_mesh<MyMesh2, Polyhedron2> build_mesh2b(P2);
+	build_mesh2b.build(mesh2b);
+	std::cout << "--> (vertices: " << mesh2b.n_vertices() << " - faces: " << mesh2b.n_faces() << " - edges: " << mesh2b.n_edges() << ")\n\n";
 
     return app.exec();
 }
