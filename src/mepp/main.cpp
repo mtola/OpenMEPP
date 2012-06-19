@@ -289,9 +289,9 @@ public:
 
     void build(Mesh& mesh_)
 	{
-		typedef typename P::Vertex_const_iterator					VCI;
-		typedef typename P::Facet_const_iterator					FCI;
-		typedef typename P::Halfedge_around_facet_const_circulator	HFCC;
+		typedef typename P::Vertex_iterator						VI;
+		typedef typename P::Facet_iterator						FI;
+		typedef typename P::Halfedge_around_facet_circulator	HFC;
 
 		OpenMesh::IO::ImporterT<Mesh> importerOpenMesh(mesh_);
 		importerOpenMesh.reserve(p_.size_of_vertices(), 3*p_.size_of_vertices(), p_.size_of_facets());
@@ -303,7 +303,7 @@ public:
 		OpenMesh::FaceHandle fh;
 
 		// output vertices
-		for (VCI vi = p_.vertices_begin(); vi != p_.vertices_end(); ++vi)
+		for (VI vi = p_.vertices_begin(); vi != p_.vertices_end(); ++vi)
 		{
 			v[0] = ::CGAL::to_double(vi->point().x());
 			v[1] = ::CGAL::to_double(vi->point().y());
@@ -312,29 +312,27 @@ public:
 			vh = importerOpenMesh.add_vertex(v);
 
 			if (p_.has_vertex_colors())
-			{
-				mesh_.set_color(vh, OpenMesh::Vec3uc(128, 128, 128)); // TODO unsigned char and alpha
-			}
+				mesh_.set_color(vh, OpenMesh::Vec3uc(vi->color(0)*255, vi->color(1)*255, vi->color(2)*255)); // TODO unsigned char and alpha
 		}
 
 		// constructs an inverse index
-		typedef CGAL::Inverse_index<VCI> Index;
+		typedef CGAL::Inverse_index<VI> Index;
 		Index index(p_.vertices_begin(), p_.vertices_end());
 
 		// output facets
-		for (FCI fi = p_.facets_begin(); fi != p_.facets_end(); ++fi)
+		for (FI fi = p_.facets_begin(); fi != p_.facets_end(); ++fi)
 		{
 			vhandles.clear(); // OpenMesh
 
-			HFCC hc = fi->facet_begin();
-			HFCC hc_end = hc;
+			HFC hc = fi->facet_begin();
+			HFC hc_end = hc;
 			std::size_t n = circulator_size(hc);
 			CGAL_assertion(n >= 3);
 
 			// facet begin
 			do
 			{
-				vhandles.push_back(OpenMesh::VertexHandle(index[VCI(hc->vertex())]));
+				vhandles.push_back(OpenMesh::VertexHandle(index[VI(hc->vertex())]));
 				++hc;
 			} while (hc != hc_end);
 			// facet end
@@ -342,9 +340,7 @@ public:
 			fh = importerOpenMesh.add_face(vhandles);
 
 			if (p_.has_face_colors())
-			{
-				mesh_.set_color(fh, OpenMesh::Vec3uc(128, 128, 128)); // TODO unsigned char and alpha
-			}
+				mesh_.set_color(fh, OpenMesh::Vec3uc(fi->color(0)*255, fi->color(1)*255, fi->color(2)*255)); // TODO unsigned char and alpha
 		}
     }
 
