@@ -31,6 +31,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
+#include <enriched_polyhedron.h>
 
 #include <OpenMesh/Core/IO/importer/ImporterT.hh>
 
@@ -302,13 +303,15 @@ private:
   P& p_;
 };
 
-typedef CGAL::Simple_cartesian<float>		Kernel1;
-typedef CGAL::Polyhedron_3<Kernel1>         Polyhedron1;
-typedef Polyhedron1::HalfedgeDS             HalfedgeDS1;
+typedef CGAL::Simple_cartesian<float>					Kernel1;
+//typedef CGAL::Polyhedron_3<Kernel1>						Polyhedron1;
+typedef Enriched_polyhedron<Kernel1, Enriched_items>	Polyhedron1;
+typedef Polyhedron1::HalfedgeDS							HalfedgeDS1;
 
-typedef CGAL::Simple_cartesian<double>		Kernel2;
-typedef CGAL::Polyhedron_3<Kernel2>         Polyhedron2;
-typedef Polyhedron2::HalfedgeDS             HalfedgeDS2;
+typedef CGAL::Simple_cartesian<double>					Kernel2;
+//typedef CGAL::Polyhedron_3<Kernel2>						Polyhedron2;
+typedef Enriched_polyhedron<Kernel2, Enriched_items>	Polyhedron2;
+typedef Polyhedron2::HalfedgeDS							HalfedgeDS2;
 
 /*!
  * \fn int main(int argc, char *argv[])
