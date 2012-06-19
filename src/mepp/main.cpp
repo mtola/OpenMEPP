@@ -88,7 +88,7 @@ template <typename M>
 bool 
 open_mesh( M& mesh_, const char* _filename, OpenMesh::IO::Options _opt )
 {
-	OpenMesh::IO::Options opt_; // mesh file options
+  OpenMesh::IO::Options opt_; // mesh file options
 
   // load mesh
   // calculate normals
@@ -137,6 +137,12 @@ open_mesh( M& mesh_, const char* _filename, OpenMesh::IO::Options _opt )
 
     if ( _opt.check( OpenMesh::IO::Options::VertexTexCoord ) )
       std::cout << "File provides texture coordinates\n";
+
+	// TODO
+	// bounding box
+
+	// center and radius
+	// normal scale for normal display / base point for displaying face normals
 
     // loading done
 	std::cout << "--> Loading done\n\n";
@@ -188,11 +194,11 @@ void loadStyleSheet()
 }
 
 // A modifier creating a polyhedron with the incremental builder.
-template <class HDS, class Mesh>
+template <class P, class HDS, class Mesh>
 class Build_polyhedron : public CGAL::Modifier_base<HDS>
 {
 public:
-    Build_polyhedron(Mesh& _mesh) : mesh_(_mesh) {}
+    Build_polyhedron(Mesh& _mesh, P& _p) : mesh_(_mesh), p_(_p) {}
 
     void operator()(HDS& hds)
 	{
@@ -201,14 +207,23 @@ public:
 
         B.begin_surface(mesh_.n_vertices(), mesh_.n_faces(), mesh_.n_halfedges());
 
-        typedef typename HDS::Vertex   Vertex;
-        typedef typename Vertex::Point Point;
+        typedef typename HDS::Vertex			Vertex;
+        typedef typename Vertex::Point			Point;
+
+		typedef typename HDS::Vertex_handle		Vertex_handle;
+		typedef typename HDS::Face_handle		Face_handle;
 
 		// vertex
 		typename Mesh::VertexIter vit;
 		for(vit=mesh_.vertices_begin(); vit!=mesh_.vertices_end(); ++vit)
 		{
-			B.add_vertex(Point(mesh_.point(vit)[0], mesh_.point(vit)[1], mesh_.point(vit)[2]));
+			Vertex_handle vertex = B.add_vertex(Point(mesh_.point(vit)[0], mesh_.point(vit)[1], mesh_.point(vit)[2]));
+
+			if (mesh_.has_vertex_colors())
+			{
+				OpenMesh::Vec3uc uc = mesh_.color(vit);
+				vertex->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha
+			}
 		}
 
 		// facet
@@ -216,7 +231,7 @@ public:
 		typename Mesh::ConstFaceVertexIter	fvIt;
 		for (; fIt!=fEnd; ++fIt)
 		{
-			B.begin_facet();
+			Face_handle face = B.begin_facet();
 
 			// only for a triangle !!!
 			/*fvIt = mesh_.cfv_iter(fIt.handle()); 
@@ -230,16 +245,40 @@ public:
 				B.add_vertex_to_facet(fvIt.handle().idx());
 
 			B.end_facet();
+
+			if (mesh_.has_face_colors())
+			{
+				OpenMesh::Vec3uc uc = mesh_.color(fIt);
+				face->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha
+			}
 		}
 
         B.end_surface();
 
 		if (B.check_unconnected_vertices())
 			B.remove_unconnected_vertices();
+
+		// ---
+
+		p_.compute_normals();
+
+		if (mesh_.has_vertex_colors())
+			p_.has_vertex_colors(true);
+		if (mesh_.has_face_colors())
+			p_.has_face_colors(true);
+
+		// TODO texture (VertexTexCoord)
+
+		p_.compute_bounding_box();
+
+		// TODO
+		// center and radius
+		// normal scale for normal display / base point for displaying face normals
     }
 
 private:
   Mesh& mesh_;
+  P& p_;
 };
 
 template <class Mesh, class P>
@@ -271,6 +310,11 @@ public:
 			v[2] = ::CGAL::to_double(vi->point().z());
 
 			vh = importerOpenMesh.add_vertex(v);
+
+			if (p_.has_vertex_colors())
+			{
+				mesh_.set_color(vh, OpenMesh::Vec3uc(128, 128, 128)); // TODO unsigned char and alpha
+			}
 		}
 
 		// constructs an inverse index
@@ -296,6 +340,11 @@ public:
 			// facet end
 
 			fh = importerOpenMesh.add_face(vhandles);
+
+			if (p_.has_face_colors())
+			{
+				mesh_.set_color(fh, OpenMesh::Vec3uc(128, 128, 128)); // TODO unsigned char and alpha
+			}
 		}
     }
 
@@ -362,13 +411,13 @@ int main(int argc, char *argv[])
 
 	std::cout << "--> OpenMeshToCGALConverter\n";
 	Polyhedron1 P1;
-    Build_polyhedron<HalfedgeDS1, MyMesh1> build_polyhedron1(mesh1);
+    Build_polyhedron<Polyhedron1, HalfedgeDS1, MyMesh1> build_polyhedron1(mesh1, P1);
     P1.delegate(build_polyhedron1);
 	std::cout << "--> (vertices: " << P1.size_of_vertices() << " - faces: " << P1.size_of_facets() << " - edges: " << (P1.size_of_halfedges() >> 1) << ")\n\n";
 
 	std::cout << "--> OpenMeshToCGALConverter\n";
 	Polyhedron2 P2;
-    Build_polyhedron<HalfedgeDS2, MyMesh2> build_polyhedron2(mesh2);
+    Build_polyhedron<Polyhedron2, HalfedgeDS2, MyMesh2> build_polyhedron2(mesh2, P2);
     P2.delegate(build_polyhedron2);
 	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << ")\n\n";
 

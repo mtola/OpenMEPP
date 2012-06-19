@@ -1,11 +1,11 @@
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-//  Class: Enriched_polyhedron                                           //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
-
-#ifndef _POLYGON_MESH_
-#define _POLYGON_MESH_
+/*!
+ * \file enriched_polyhedron.h
+ * \brief Class: Enriched_polyhedron.
+ * \author Le-Jeng Shiue, Pierre Alliez, Radu Ursu, Lutz Kettner and Martial TOLA, CNRS-Lyon, LIRIS UMR 5205
+ * \date 2004-2012
+ */
+#ifndef _ENRICHED_POLYHEDRON_
+#define _ENRICHED_POLYHEDRON_
 
 // CGAL stuff
 #include <CGAL/Cartesian.h>
@@ -16,20 +16,25 @@
 template <class Refs, class T, class P, class Norm>
 class Enriched_facet : public CGAL::HalfedgeDS_face_base<Refs, T>
 {
+private:
+
   // tag
   int m_tag; 
 
   // normal
   Norm m_normal;
 
+  // color
+  float m_color[3];
+
 public:
 
   // life cycle
   // no constructors to repeat, since only
   // default constructor mandatory
-
   Enriched_facet()
   {
+	color(0.5f, 0.5f, 0.5f);
   }
 
   // tag
@@ -40,6 +45,10 @@ public:
   typedef Norm Normal_3;
   Normal_3& normal() { return m_normal; }
   const Normal_3& normal() const { return m_normal; }
+
+  // color
+  float color(int index) { return m_color[index]; }
+  void color(float r, float g, float b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
 };
 
 // a refined halfedge with a general tag and 
@@ -75,17 +84,20 @@ public:
   void control_edge(const bool& flag) { m_control_edge  = flag; }
 };
 
-
-
 // a refined vertex with a normal and a tag
 template <class Refs, class T, class P, class Norm>
 class Enriched_vertex : public CGAL::HalfedgeDS_vertex_base<Refs, T, P>
 {
+private:
+
   // tag
   int m_tag; 
 
   // normal
   Norm m_normal;
+
+  // color
+  float m_color[3];
 
 public:
   // life cycle
@@ -94,6 +106,7 @@ public:
   Enriched_vertex(const P& pt)
     : CGAL::HalfedgeDS_vertex_base<Refs, T, P>(pt)
   {
+	color(0.5f, 0.5f, 0.5f);
   }
 
   // normal
@@ -105,6 +118,10 @@ public:
   int& tag() {  return m_tag; }
   const int& tag() const {  return m_tag; }
   void tag(const int& t)  { m_tag = t; }
+
+  // color
+  float color(int index) { return m_color[index]; }
+  void color(float r, float g, float b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
 };
 
 // A redefined items class for the Polyhedron_3 
@@ -114,12 +131,11 @@ public:
 // plane equation (this is an alternative 
 // solution instead of using 
 // Polyhedron_traits_with_normals_3).
-
 struct Enriched_items : public CGAL::Polyhedron_items_3
 {
     // wrap vertex
     template <class Refs, class Traits>
-    struct Vertex_wrapper
+    struct Vertex_wrapper // is a vertex with a reference to an incident halfedge and it stores a point of type Point
     {
         typedef typename Traits::Point_3  Point;
         typedef typename Traits::Vector_3 Normal;
@@ -131,7 +147,7 @@ struct Enriched_items : public CGAL::Polyhedron_items_3
 
     // wrap face
     template <class Refs, class Traits>
-    struct Face_wrapper
+    struct Face_wrapper // is a face with a reference to an incident halfedge, it stores a normal vector instead of a plane equation of type Plane
     {
         typedef typename Traits::Point_3  Point;
         typedef typename Traits::Vector_3 Normal;
@@ -142,8 +158,8 @@ struct Enriched_items : public CGAL::Polyhedron_items_3
     };
 
     // wrap halfedge
-    template <class Refs, class Traits>
-    struct Halfedge_wrapper
+    template <class Refs, class Traits> // in all cases, a reference to the next halfedge and to the opposite halfedge is supported
+    struct Halfedge_wrapper // here, a reference to the previous halfedge, to the incident vertex and to the incident face is also supported
     {
         typedef typename Traits::Vector_3 Normal;
         typedef Enriched_halfedge<Refs,
@@ -173,6 +189,10 @@ private :
   bool m_pure_quad;
   bool m_pure_triangle;
 
+  // color
+  bool m_vertex_color;
+  bool m_face_color;
+
 public :
 
   // life cycle
@@ -180,6 +200,10 @@ public :
   {
     m_pure_quad = false;
     m_pure_triangle = false;
+
+	// color
+	m_vertex_color = false;
+    m_face_color = false;
   }
   virtual ~Enriched_polyhedron() 
   {
@@ -188,6 +212,13 @@ public :
   // type
   bool is_pure_triangle() { return m_pure_triangle; }
   bool is_pure_quad() { return m_pure_quad; }
+
+  // color
+  bool has_vertex_colors() { return m_vertex_color; }
+  bool has_face_colors() { return m_face_color; }
+
+  void has_vertex_colors(const bool& flag) { m_vertex_color  = flag; }
+  void has_face_colors(const bool& flag) { m_face_color  = flag; }
 
   // normals (per facet, then per vertex)
   void compute_normals_per_facet()
@@ -213,7 +244,7 @@ public :
   {
     if(size_of_vertices() == 0)
     {
-      ASSERT(false);
+      /*ASSERT*/CGAL_assertion(false);
       return;
     }
 
@@ -595,7 +626,7 @@ public :
   void tag_component(Facet_handle pSeedFacet,
                      const int tag_free,
                      const int tag_done)
-{
+  {
     pSeedFacet->tag(tag_done);
     std::list<Facet_handle> facets;
     facets.push_front(pSeedFacet);
@@ -616,7 +647,7 @@ public :
         }
       }
     }
-}
+  }
 
   // count #components
   unsigned int nb_components()
@@ -685,11 +716,10 @@ struct Facet_normal // (functor)
     else
     {
       f.normal() = CGAL::NULL_VECTOR;
-      TRACE("degenerate face\n");
+      //TRACE("degenerate face\n");
     }
   }
 };
-
 
 // compute vertex normal 
 struct Vertex_normal // (functor)
@@ -711,4 +741,4 @@ struct Vertex_normal // (functor)
     }
 };
 
-#endif // _POLYGON_MESH_
+#endif // _ENRICHED_POLYHEDRON_
