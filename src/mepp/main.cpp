@@ -379,15 +379,19 @@ int main(int argc, char *argv[])
 	OpenMesh::IO::Options opt;
 
 	MyMesh1 mesh1;	
-	open_mesh<MyMesh1>(mesh1, "C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt);
+	//open_mesh<MyMesh1>(mesh1, "C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt);
+        open_mesh<MyMesh1>(mesh1, "/home/mepp/Desktop/face.texture.ply/face.ply", opt);
 	std::cout << "--> (vertices: " << mesh1.n_vertices() << " - faces: " << mesh1.n_faces() << " - edges: " << mesh1.n_edges() << ")\n\n";
 
 	MyMesh2 mesh2;
-	open_mesh<MyMesh2>(mesh2, "C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt);
+	//open_mesh<MyMesh2>(mesh2, "C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt);
+        open_mesh<MyMesh2>(mesh2, "/home/mepp/Desktop/face.obj/face.obj", opt);
 	std::cout << "--> (vertices: " << mesh2.n_vertices() << " - faces: " << mesh2.n_faces() << " - edges: " << mesh2.n_edges() << ")\n\n";
 
-	open_texture<MyMesh1>("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
-	open_texture<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
+	//open_texture<MyMesh1>("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
+        open_texture<MyMesh1>("/home/mepp/Desktop/face.texture.ply/face_skin_hi.bmp");
+	//open_texture<MyMesh2>("C:\\Users\\noname\\Desktop\\face.obj\\face_skin_hi.jpg");
+        open_texture<MyMesh2>("/home/mepp/Desktop/face.obj/face_skin_hi.jpg");
 
 #if(0)
 	OpenMesh::IO::ImporterCGAL/*<Mesh>*/ importerCGAL/*(_mesh)*/;

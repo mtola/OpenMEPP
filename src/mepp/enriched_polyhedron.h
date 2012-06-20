@@ -10,7 +10,61 @@
 // CGAL stuff
 #include <CGAL/Cartesian.h>
 #include <CGAL/Polyhedron_3.h>
+
+#include <fstream>
 #include <list>
+
+#include <GL/glu.h>
+
+// compute facet normal 
+struct Facet_normal // (functor)
+{
+  template <class Facet>
+  void operator()(Facet& f)
+  {
+    typename Facet::Normal_3 sum = CGAL::NULL_VECTOR;
+    typename Facet::Halfedge_around_facet_circulator h = f.facet_begin();
+    do
+    {
+      typename Facet::Normal_3 normal = CGAL::cross_product(
+        h->next()->vertex()->point() - h->vertex()->point(),
+        h->next()->next()->vertex()->point() - h->next()->vertex()->point());
+      double sqnorm = normal * normal;
+      if(sqnorm != 0)
+        normal = normal / (float)std::sqrt(sqnorm);
+      sum = sum + normal;
+    }
+    while(++h != f.facet_begin());
+    float sqnorm = sum * sum;
+    if(sqnorm != 0.0)
+      f.normal() = sum / std::sqrt(sqnorm);
+    else
+    {
+      f.normal() = CGAL::NULL_VECTOR;
+      //TRACE("degenerate face\n");
+    }
+  }
+};
+
+// compute vertex normal 
+struct Vertex_normal // (functor)
+{
+    template <class Vertex>
+    void operator()(Vertex& v)
+    {
+        typename Vertex::Normal_3 normal = CGAL::NULL_VECTOR;
+        typename Vertex::Halfedge_around_vertex_const_circulator pHalfedge = v.vertex_begin();
+        typename Vertex::Halfedge_around_vertex_const_circulator begin = pHalfedge;
+        CGAL_For_all(pHalfedge,begin) 
+          if(!pHalfedge->is_border())
+            normal = normal + pHalfedge->facet()->normal();
+        float sqnorm = normal * normal;
+        if(sqnorm != 0.0f)
+          v.normal() = normal / (float)std::sqrt(sqnorm);
+        else
+          v.normal() = CGAL::NULL_VECTOR;
+    }
+};
 
 // a refined facet with a normal and a tag
 template <class Refs, class T, class P, class Norm>
@@ -179,6 +233,25 @@ public :
   typedef typename kernel::Point_3 Point;
   typedef typename kernel::Vector_3 Vector;
   typedef typename kernel::Iso_cuboid_3 Iso_cuboid;
+  
+  // ---
+  
+  typedef typename Enriched_polyhedron::Facet_handle Facet_handle;
+  typedef typename Enriched_polyhedron::Vertex_handle Vertex_handle;
+  typedef typename Enriched_polyhedron::Halfedge_handle Halfedge_handle;
+  
+  typedef typename Enriched_polyhedron::Facet_iterator Facet_iterator;
+  typedef typename Enriched_polyhedron::Vertex_iterator Vertex_iterator;
+  typedef typename Enriched_polyhedron::Halfedge_iterator Halfedge_iterator;
+  typedef typename Enriched_polyhedron::Edge_iterator Edge_iterator;
+  typedef typename Enriched_polyhedron::Point_iterator Point_iterator;
+  
+  typedef typename Enriched_polyhedron::Halfedge_around_facet_circulator Halfedge_around_facet_circulator;
+  typedef typename Enriched_polyhedron::Halfedge_around_vertex_circulator Halfedge_around_vertex_circulator;
+  
+  typedef typename Enriched_polyhedron::HalfedgeDS HalfedgeDS;
+  typedef typename HalfedgeDS::Face Facet;
+  typedef typename Facet::Normal_3 Normal;
 
 private :
 
@@ -223,11 +296,11 @@ public :
   // normals (per facet, then per vertex)
   void compute_normals_per_facet()
   {
-    std::for_each(facets_begin(),facets_end(),Facet_normal());
+    std::for_each(this->facets_begin(),this->facets_end(),Facet_normal());
   }
   void compute_normals_per_vertex()
   {
-    std::for_each(vertices_begin(),vertices_end(),Vertex_normal());
+    std::for_each(this->vertices_begin(),this->vertices_end(),Vertex_normal());
   }
   void compute_normals()
   {
@@ -242,19 +315,19 @@ public :
   // compute bounding box
   void compute_bounding_box()
   {
-    if(size_of_vertices() == 0)
+    if(this->size_of_vertices() == 0)
     {
       /*ASSERT*/CGAL_assertion(false);
       return;
     }
 
     FT xmin,xmax,ymin,ymax,zmin,zmax;
-    Vertex_iterator pVertex = vertices_begin();
+    Vertex_iterator pVertex = this->vertices_begin();
     xmin = xmax = pVertex->point().x();
     ymin = ymax = pVertex->point().y();
     zmin = zmax = pVertex->point().z();
     for(;
-        pVertex !=  vertices_end();
+        pVertex !=  this->vertices_end();
         pVertex++)
     {
       const Point& p = pVertex->point();
@@ -324,8 +397,8 @@ public :
   // tag all halfedges
   void tag_halfedges(const int tag)
   {
-    for(Halfedge_iterator pHalfedge = halfedges_begin();
-        pHalfedge != halfedges_end();
+    for(Halfedge_iterator pHalfedge = this->halfedges_begin();
+        pHalfedge != this->halfedges_end();
         pHalfedge++)
       pHalfedge->tag(tag);
   }
@@ -333,8 +406,8 @@ public :
   // tag all facets
   void tag_facets(const int tag)
   {
-    for(Facet_iterator pFacet = facets_begin();
-        pFacet  != facets_end();
+    for(Facet_iterator pFacet = this->facets_begin();
+        pFacet  != this->facets_end();
         pFacet++)
       pFacet->tag(tag);
   }
@@ -343,8 +416,8 @@ public :
   void set_index_vertices()
   {
     int index = 0;
-    for(Vertex_iterator pVertex = vertices_begin();
-        pVertex != vertices_end();
+    for(Vertex_iterator pVertex = this->vertices_begin();
+        pVertex != this->vertices_end();
         pVertex++)
       pVertex->tag(index++);
   }
@@ -352,8 +425,8 @@ public :
   // is pure degree ?
   bool is_pure_degree(unsigned int d)
   {
-    for(Facet_iterator pFace  = facets_begin();
-        pFace != facets_end();
+    for(Facet_iterator pFace  = this->facets_begin();
+        pFace != this->facets_end();
         pFace++)
       if(degree(pFace) != d)
         return false;
@@ -380,7 +453,7 @@ public :
       vec = vec + (pHalfEdge->vertex()->point()-CGAL::ORIGIN);
       degree++;
     }
-    center = CGAL::ORIGIN + (vec/(kernel::FT)degree);
+    center = CGAL::ORIGIN + (vec/(/*kernel::*/FT)degree);
   }
 
   // compute average edge length around a vertex
@@ -406,8 +479,8 @@ public :
                bool use_normals)
   {
     // draw polygons
-    Facet_iterator pFacet = facets_begin();
-    for(;pFacet != facets_end();pFacet++)
+    Facet_iterator pFacet = this->facets_begin();
+    for(;pFacet != this->facets_end();pFacet++)
     {
       // begin polygon assembly
       ::glBegin(GL_POLYGON);
@@ -424,7 +497,7 @@ public :
     // one normal per face
     if(use_normals && !smooth_shading)
     {
-      const Facet::Normal_3& normal = pFacet->normal();
+      const /*Facet::*/Normal/*_3*/& normal = pFacet->normal();
       ::glNormal3f(normal[0],normal[1],normal[2]);
     }
 
@@ -435,7 +508,7 @@ public :
       // one normal per vertex
       if(use_normals && smooth_shading)
       {
-        const Facet::Normal_3& normal = pHalfedge->vertex()->normal();
+        const /*Facet::*/Normal/*_3*/& normal = pHalfedge->vertex()->normal();
         ::glNormal3f(normal[0],normal[1],normal[2]);
       }
 
@@ -452,8 +525,8 @@ public :
                          bool voronoi_edge = false)
   {
     ::glBegin(GL_LINES);
-    for(Edge_iterator h = edges_begin();
-        h != edges_end();
+    for(Edge_iterator h = this->edges_begin();
+        h != this->edges_end();
         h++)
     {
       // ignore this edges
@@ -501,8 +574,8 @@ public :
   void superimpose_vertices()
   {
     ::glBegin(GL_POINTS);
-    for(Point_iterator pPoint = points_begin();
-        pPoint != points_end();
+    for(Point_iterator pPoint = this->points_begin();
+        pPoint != this->points_end();
         pPoint++)
       ::glVertex3f(pPoint->x(),pPoint->y(),pPoint->z());
     ::glEnd(); // // end point assembly
@@ -514,8 +587,8 @@ public :
     GLUquadricObj* pQuadric = gluNewQuadric();
     ::glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
   
-    for(Vertex_iterator pVertex = vertices_begin();
-        pVertex !=  vertices_end();
+    for(Vertex_iterator pVertex = this->vertices_begin();
+        pVertex !=  this->vertices_end();
         pVertex++)
     {
       ::glPushMatrix();
@@ -536,8 +609,8 @@ public :
     std::ofstream stream(pFilename);
 
     // output vertices
-    for(Point_iterator pPoint = points_begin();
-        pPoint != points_end(); 
+    for(Point_iterator pPoint = this->points_begin();
+        pPoint != this->points_end(); 
         pPoint++) 
       stream << 'v' << ' ' << pPoint->x() << ' ' <<
                               pPoint->y() << ' ' <<
@@ -547,8 +620,8 @@ public :
     this->set_index_vertices(); 
 
     // output facets
-    for(Facet_iterator pFacet = facets_begin();
-        pFacet != facets_end(); 
+    for(Facet_iterator pFacet = this->facets_begin();
+        pFacet != this->facets_end(); 
         pFacet++) 
     {
       stream << 'f';
@@ -603,8 +676,8 @@ public :
   {
     unsigned int nb = 0;
     tag_halfedges(0);
-    for(Halfedge_iterator he = halfedges_begin();
-        he != halfedges_end();
+    for(Halfedge_iterator he = this->halfedges_begin();
+        he != this->halfedges_end();
         he++)
     {
       if(he->is_border() && he->tag() == 0)
@@ -654,8 +727,8 @@ public :
   {
     unsigned int nb = 0;
     tag_facets(0);
-    for(Facet_iterator pFacet = facets_begin();
-        pFacet != facets_end();
+    for(Facet_iterator pFacet = this->facets_begin();
+        pFacet != this->facets_end();
         pFacet++)
     {
       if(pFacet->tag() == 0)
@@ -676,9 +749,9 @@ public :
   {
     int c = nb_components();
     int b = nb_boundaries();
-    int v = size_of_vertices();
-    int e = size_of_halfedges()/2;
-    int f = size_of_facets();
+    int v = this->size_of_vertices();
+    int e = this->size_of_halfedges()/2;
+    int f = this->size_of_facets();
     return genus(c,v,f,e,b);
   }
   int genus(int c,
@@ -689,56 +762,6 @@ public :
   {
     return (2*c+e-b-f-v)/2;
   }
-};
-
-// compute facet normal 
-struct Facet_normal // (functor)
-{
-  template <class Facet>
-  void operator()(Facet& f)
-  {
-    typename Facet::Normal_3 sum = CGAL::NULL_VECTOR;
-    typename Facet::Halfedge_around_facet_circulator h = f.facet_begin();
-    do
-    {
-      typename Facet::Normal_3 normal = CGAL::cross_product(
-        h->next()->vertex()->point() - h->vertex()->point(),
-        h->next()->next()->vertex()->point() - h->next()->vertex()->point());
-      double sqnorm = normal * normal;
-      if(sqnorm != 0)
-        normal = normal / (float)std::sqrt(sqnorm);
-      sum = sum + normal;
-    }
-    while(++h != f.facet_begin());
-    float sqnorm = sum * sum;
-    if(sqnorm != 0.0)
-      f.normal() = sum / std::sqrt(sqnorm);
-    else
-    {
-      f.normal() = CGAL::NULL_VECTOR;
-      //TRACE("degenerate face\n");
-    }
-  }
-};
-
-// compute vertex normal 
-struct Vertex_normal // (functor)
-{
-    template <class Vertex>
-    void operator()(Vertex& v)
-    {
-        typename Vertex::Normal_3 normal = CGAL::NULL_VECTOR;
-        Vertex::Halfedge_around_vertex_const_circulator pHalfedge = v.vertex_begin();
-        Vertex::Halfedge_around_vertex_const_circulator begin = pHalfedge;
-        CGAL_For_all(pHalfedge,begin) 
-          if(!pHalfedge->is_border())
-            normal = normal + pHalfedge->facet()->normal();
-        float sqnorm = normal * normal;
-        if(sqnorm != 0.0f)
-          v.normal() = normal / (float)std::sqrt(sqnorm);
-        else
-          v.normal() = CGAL::NULL_VECTOR;
-    }
 };
 
 #endif // _ENRICHED_POLYHEDRON_
