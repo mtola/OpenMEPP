@@ -16,7 +16,7 @@
 #endif
 // some Mepp components want this on windows
 #if !defined(NOMINMAX)
-//#define NOMINMAX
+#define NOMINMAX
 #endif
 #endif
 

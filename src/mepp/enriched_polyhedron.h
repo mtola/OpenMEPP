@@ -14,6 +14,9 @@
 #include <fstream>
 #include <list>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
 #include <GL/glu.h>
 
 // compute facet normal 
