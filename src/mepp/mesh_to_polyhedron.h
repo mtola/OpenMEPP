@@ -208,25 +208,28 @@ public:
             if (p_.has_face_colors())
                     //mesh_.has_face_colors();*/
 
-            // TODO texture (VertexTexCoord)
-
             // bounding box
-            typename MyMesh::ConstVertexIter vIt(mesh_.vertices_begin());
-            typename MyMesh::ConstVertexIter vEnd(mesh_.vertices_end());
+			if (mesh_.n_vertices()>=0)
+			{
+				// TODO texture (VertexTexCoord)
 
-            _mesh.bbMin = _mesh.bbMax = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
+				typename MyMesh::ConstVertexIter vIt(mesh_.vertices_begin());
+				typename MyMesh::ConstVertexIter vEnd(mesh_.vertices_end());
+
+				//_mesh.bbMin = _mesh.bbMax = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
                 
-            for (size_t count=0; vIt!=vEnd; ++vIt, ++count)
-            {
-                _mesh.bbMin.minimize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
-                _mesh.bbMax.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
-            }
+				for (size_t count=0; vIt!=vEnd; ++vIt, ++count)
+				{
+					_mesh.bbMin.minimize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
+					_mesh.bbMax.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
+				}
                     
-            // set center and radius
-            // TODO set_scene_pos( (bbMin+bbMax)*0.5, (bbMin-bbMax).norm()*0.5 );
+				// set center and radius
+				// TODO set_scene_pos( (bbMin+bbMax)*0.5, (bbMin-bbMax).norm()*0.5 );
                 
-            // for normal display
-            _mesh.normal_scale_ = (_mesh.bbMax-_mesh.bbMin).min()*0.05f;
+				// for normal display
+				_mesh.normal_scale_ = (_mesh.bbMax-_mesh.bbMin).min()*0.05f;
+			}
 	}
 
 private:
