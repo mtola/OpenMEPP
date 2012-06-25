@@ -4,6 +4,7 @@
  * \author Le-Jeng Shiue, Pierre Alliez, Radu Ursu, Lutz Kettner and Martial TOLA, CNRS-Lyon, LIRIS UMR 5205
  * \date 2004-2012
  */
+
 #ifndef _ENRICHED_POLYHEDRON_
 #define _ENRICHED_POLYHEDRON_
 
