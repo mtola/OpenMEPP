@@ -20,6 +20,8 @@
 #endif
 #include <GL/glu.h>
 
+// TODO ::CGAL::to_double
+
 // compute facet normal 
 struct Facet_normal // (functor)
 {
@@ -270,6 +272,14 @@ private :
   bool m_vertex_color;
   bool m_face_color;
 
+public: // TODO temp !!!
+
+  Vector bbMin, bbMax;
+  float normal_scale_;
+
+  Vector center_;
+  float radius_;
+
 public :
 
   // life cycle
@@ -281,6 +291,8 @@ public :
 	// color
 	m_vertex_color = false;
     m_face_color = false;
+
+	normal_scale_ = radius_ = 0.;
   }
   virtual ~Enriched_polyhedron() 
   {
@@ -346,6 +358,9 @@ public :
     }
     m_bbox = Iso_cuboid(xmin,ymin,zmin,
                         xmax,ymax,zmax);
+
+	bbMin = Vector(xmin,ymin,zmin);
+	bbMax = Vector(xmax,ymax,zmax);
   }
 
   // bounding box

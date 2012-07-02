@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
 
 	Mesh1 M1;
     M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt);
+	//M1.open_mesh("C:\\Users\\noname\\Desktop\\rgb_monkey.obj", opt);
     //M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt);
 	std::cout << "--> (vertices: " << M1.mesh().n_vertices() << " - faces: " << M1.mesh().n_faces() << " - edges: " << M1.mesh().n_edges() << ")\n\n";
 
@@ -166,13 +167,13 @@ int main(int argc, char *argv[])
 	Polyhedron1 P1;
     Build_polyhedron<Polyhedron1, HalfedgeDS1, Mesh1, MyMesh1> build_polyhedron1(M1, P1);
     P1.delegate(build_polyhedron1);
-	std::cout << "--> (vertices: " << P1.size_of_vertices() << " - faces: " << P1.size_of_facets() << " - edges: " << (P1.size_of_halfedges() >> 1) << ")\n\n";
+	std::cout << "--> (vertices: " << P1.size_of_vertices() << " - faces: " << P1.size_of_facets() << " - edges: " << (P1.size_of_halfedges() >> 1) << " - radius: " << P1.radius_ << " - n_scale: " << P1.normal_scale_ << ")\n\n";
 
 	std::cout << "--> OpenMeshToCGALConverter\n";
 	Polyhedron2 P2;
     Build_polyhedron<Polyhedron2, HalfedgeDS2, Mesh2, MyMesh2> build_polyhedron2(M2, P2);
     P2.delegate(build_polyhedron2);
-	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << ")\n\n";
+	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << " - radius: " << P2.radius_ << " - n_scale: " << P2.normal_scale_ << ")\n\n";
 
 	// ---
 
@@ -180,13 +181,13 @@ int main(int argc, char *argv[])
 	Mesh1 M1b;
 	Build_mesh<Mesh1, MyMesh1, Polyhedron1> build_mesh1b(P1);
 	build_mesh1b.build(M1b);
-	std::cout << "--> (vertices: " << M1b.mesh().n_vertices() << " - faces: " << M1b.mesh().n_faces() << " - edges: " << M1b.mesh().n_edges() << ")\n\n";
+	std::cout << "--> (vertices: " << M1b.mesh().n_vertices() << " - faces: " << M1b.mesh().n_faces() << " - edges: " << M1b.mesh().n_edges() << " - radius: " << M1b.radius_ << " - n_scale: " << M1b.normal_scale_ << ")\n\n";
 
 	std::cout << "--> CGALToOpenMeshConverter\n";
 	Mesh2 M2b;
 	Build_mesh<Mesh2, MyMesh2, Polyhedron2> build_mesh2b(P2);
 	build_mesh2b.build(M2b);
-	std::cout << "--> (vertices: " << M2b.mesh().n_vertices() << " - faces: " << M2b.mesh().n_faces() << " - edges: " << M2b.mesh().n_edges() << ")\n\n";
+	std::cout << "--> (vertices: " << M2b.mesh().n_vertices() << " - faces: " << M2b.mesh().n_faces() << " - edges: " << M2b.mesh().n_edges() << " - radius: " << M2b.radius_ << " - n_scale: " << M2b.normal_scale_ << ")\n\n";
 
     return app.exec();
 }

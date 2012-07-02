@@ -58,6 +58,7 @@ public:
   // default constructor
   Enriched_mesh()
   {
+	  normal_scale_ = radius_ = 0.;
   }
   
   // destructor
@@ -79,8 +80,12 @@ private:
   Mesh mesh_;
   
 public: // TODO temp !!!
+
   OpenMesh::Vec3f bbMin, bbMax;
   float normal_scale_;
+
+  OpenMesh::Vec3f center_;
+  float radius_;
 };
 
 template <typename M>
@@ -147,8 +152,9 @@ Enriched_mesh<M>::open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
       bbMax.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
     }
         
-    // set center and radius
-    // TODO set_scene_pos( (bbMin+bbMax)*0.5, (bbMin-bbMax).norm()*0.5 );
+    // set center and radius ( set_scene_pos( , ) )
+    center_ = (bbMin+bbMax)*0.5;
+    radius_ = (bbMin-bbMax).norm()*0.5;
     
     // for normal display
     normal_scale_ = (bbMax-bbMin).min()*0.05f;

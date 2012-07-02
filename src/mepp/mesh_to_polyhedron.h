@@ -106,20 +106,36 @@ public:
 
         // ---
 
+		// normals
         p_.compute_normals();
 
-        if (mesh_.has_vertex_colors())
-                p_.has_vertex_colors(true);
-        if (mesh_.has_face_colors())
-                p_.has_face_colors(true);
+		if (p_.size_of_vertices()>0)
+		{
+			// colors
+			if (mesh_.has_vertex_colors())
+					p_.has_vertex_colors(true);
+			if (mesh_.has_face_colors())
+					p_.has_face_colors(true);
+			if (p_.has_vertex_colors())
+					std::cout << "Polyhedron provides vertex colors\n";
+			if (p_.has_face_colors())
+					std::cout << "Polyhedron provides face colors\n";
 
-        // TODO texture (VertexTexCoord)
+			// TODO texture (VertexTexCoord)
 
-        p_.compute_bounding_box();
+			// bounding box
+			p_.compute_bounding_box();
 
-        // TODO
-        // center and radius
-        // normal scale for normal display / base point for displaying face normals
+			// set center and radius ( set_scene_pos( , ) )
+			p_.center_ = (p_.bbMin + p_.bbMax)*0.5;
+			p_.radius_ = std::sqrt( ::CGAL::to_double( (p_.bbMin - p_.bbMax).squared_length() ) )*0.5;
+                
+			// set normal scale for normal display
+			P::Vector diff = p_.bbMax - p_.bbMin;
+			p_.normal_scale_ = ::CGAL::to_double( ::CGAL::min( ::CGAL::min(diff[0], diff [1]), diff[2] ) )*0.05f;
+
+			// TODO set base point for displaying face normals
+		}
 	}
 
 private:
@@ -199,24 +215,29 @@ public:
                 
             // ---
 
+			// normals
 			mesh_.update_face_normals();
             mesh_.update_vertex_normals();
 
-            // TODO
-            /*if (p_.has_vertex_colors())
-                    //mesh_ += OpenMesh::IO::Options::VertexColor;
-            if (p_.has_face_colors())
-                    //mesh_.has_face_colors();*/
-
-            // bounding box
-			if (mesh_.n_vertices()>=0)
+			if (mesh_.n_vertices()>0)
 			{
+				// colors
+				if (!p_.has_vertex_colors())
+					mesh_.release_vertex_colors();
+				if (!p_.has_face_colors())
+					mesh_.release_face_colors();
+				if (mesh_.has_vertex_colors())
+					std::cout << "Mesh provides vertex colors\n";
+				if (mesh_.has_face_colors())
+					std::cout << "Mesh provides face colors\n";
+			
 				// TODO texture (VertexTexCoord)
 
+				// bounding box
 				typename MyMesh::ConstVertexIter vIt(mesh_.vertices_begin());
 				typename MyMesh::ConstVertexIter vEnd(mesh_.vertices_end());
 
-				//_mesh.bbMin = _mesh.bbMax = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
+				_mesh.bbMin = _mesh.bbMax = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
                 
 				for (size_t count=0; vIt!=vEnd; ++vIt, ++count)
 				{
@@ -224,11 +245,14 @@ public:
 					_mesh.bbMax.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
 				}
                     
-				// set center and radius
-				// TODO set_scene_pos( (bbMin+bbMax)*0.5, (bbMin-bbMax).norm()*0.5 );
+				// set center and radius ( set_scene_pos( , ) )
+				_mesh.center_ = (_mesh.bbMin + _mesh.bbMax)*0.5;
+				_mesh.radius_ = (_mesh.bbMin - _mesh.bbMax).norm()*0.5;
                 
-				// for normal display
-				_mesh.normal_scale_ = (_mesh.bbMax-_mesh.bbMin).min()*0.05f;
+				// set normal scale for normal display
+				_mesh.normal_scale_ = (_mesh.bbMax - _mesh.bbMin).min()*0.05f;
+
+				// TODO set base point for displaying face normals
 			}
 	}
 
