@@ -33,7 +33,6 @@
 //#include <ImporterCGAL.h>
 //#include <ExporterCGAL.h>
 
-
 #include <QApplication>
 #include <QtGui>
 //Q_IMPORT_PLUGIN(qjpeg)
@@ -128,17 +127,19 @@ int main(int argc, char *argv[])
 	loadStyleSheet();
 	window.show();
 
-	OpenMesh::IO::Options opt;
+	OpenMesh::IO::Options opt1, opt2;
 
 	Mesh1 M1;
-    M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt);
-	//M1.open_mesh("C:\\Users\\noname\\Desktop\\rgb_monkey.obj", opt);
-    //M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt);
+    //M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt1);
+	M1.open_mesh("C:\\Users\\noname\\Desktop\\rgb_monkey.obj", opt1);
+	//M1.open_mesh("mesh_c.off", opt1);
+    //M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt1);
 	std::cout << "--> (vertices: " << M1.mesh().n_vertices() << " - faces: " << M1.mesh().n_faces() << " - edges: " << M1.mesh().n_edges() << ")\n\n";
 
 	Mesh2 M2;
-    M2.open_mesh("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt);
-    //M2.open_mesh("/home/mepp/Desktop/face.obj/face.obj", opt);
+    M2.open_mesh("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt2);
+	//M2.open_mesh("mesh_t.off", opt2);
+    //M2.open_mesh("/home/mepp/Desktop/face.obj/face.obj", opt2);
 	std::cout << "--> (vertices: " << M2.mesh().n_vertices() << " - faces: " << M2.mesh().n_faces() << " - edges: " << M2.mesh().n_edges() << ")\n\n";
 
 	M1.open_texture("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
@@ -148,6 +149,8 @@ int main(int argc, char *argv[])
     //M2.open_texture("/home/mepp/Desktop/face.obj/face_skin_hi.jpg");
 
 #if(0)
+	OpenMesh::IO::Options opt;
+
 	OpenMesh::IO::ImporterCGAL/*<Mesh>*/ importerCGAL/*(_mesh)*/;
 	std::cout << "--> Loading with ImporterCGAL\n";
 	if ( OpenMesh::IO::IOManager().read("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", importerCGAL, opt) )
@@ -177,6 +180,12 @@ int main(int argc, char *argv[])
 
 	// ---
 
+	std::cout << "--> CGAL triangulation\n";
+	P2.triangulate();
+	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << ")\n\n";
+
+	// ---
+
 	std::cout << "--> CGALToOpenMeshConverter\n";
 	Mesh1 M1b;
 	Build_mesh<Mesh1, MyMesh1, Polyhedron1> build_mesh1b(P1);
@@ -188,6 +197,25 @@ int main(int argc, char *argv[])
 	Build_mesh<Mesh2, MyMesh2, Polyhedron2> build_mesh2b(P2);
 	build_mesh2b.build(M2b);
 	std::cout << "--> (vertices: " << M2b.mesh().n_vertices() << " - faces: " << M2b.mesh().n_faces() << " - edges: " << M2b.mesh().n_edges() << " - radius: " << M2b.radius_ << " - n_scale: " << M2b.normal_scale_ << ")\n\n";
+
+	//return app.exec();
+
+	// ---
+
+	OpenMesh::IO::Options optw1; optw1 += OpenMesh::IO::Options::VertexColor;
+	OpenMesh::IO::Options optw2;
+
+	std::cout << "--> Writing mesh\n";
+	if (OpenMesh::IO::write_mesh(M1b.mesh(), "mesh_c.off", optw1))
+		std::cout << "--> Writing done\n\n";
+	else
+		std::cout << "--> Writing error\n\n";
+
+	std::cout << "--> Writing mesh\n";
+	if (OpenMesh::IO::write_mesh(M2b.mesh(), "mesh_t.off", optw2))
+		std::cout << "--> Writing done\n\n";
+	else
+		std::cout << "--> Writing error\n\n";
 
     return app.exec();
 }

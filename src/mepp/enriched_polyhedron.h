@@ -781,6 +781,51 @@ public :
   {
     return (2*c+e-b-f-v)/2;
   }
+
+  // ---
+
+	void triangulate()
+	{
+		Facet_iterator f = this->facets_begin();
+		Facet_iterator f2 = this->facets_begin();
+		do //for (; f != this->facets_end(); f++)
+		{
+			f = f2;
+			if (f == this->facets_end())
+			{
+				break;
+			}
+			f2++;
+
+			if (!(f->is_triangle()))
+			{
+				int num = (int)(f->facet_degree() - 3);
+				Halfedge_handle h = f->halfedge();
+
+				h = this->make_hole(h);
+
+				Halfedge_handle g = h->next();
+				g = g->next();
+
+				g = this->add_facet_to_border (h, g);
+
+				num--;
+				while (num != 0)
+				{
+					g = g->opposite();
+					g = g->next();
+					g = this->add_facet_to_border (h, g);
+					num--;
+				}
+
+				this->fill_hole(h);
+			}
+
+		} while (true);
+
+		this->compute_normals();
+		this->compute_type();
+	}
 };
 
 #endif // _ENRICHED_POLYHEDRON_

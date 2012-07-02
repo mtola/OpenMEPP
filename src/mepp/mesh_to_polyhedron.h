@@ -131,7 +131,7 @@ public:
 			p_.radius_ = std::sqrt( ::CGAL::to_double( (p_.bbMin - p_.bbMax).squared_length() ) )*0.5;
                 
 			// set normal scale for normal display
-			P::Vector diff = p_.bbMax - p_.bbMin;
+			typename P::Vector diff = p_.bbMax - p_.bbMin;
 			p_.normal_scale_ = ::CGAL::to_double( ::CGAL::min( ::CGAL::min(diff[0], diff [1]), diff[2] ) )*0.05f;
 
 			// TODO set base point for displaying face normals
