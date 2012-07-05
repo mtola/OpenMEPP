@@ -274,13 +274,13 @@ IF(APPLE)
 	#--------------------------------------------------------------------------------
 	# Install needed Qt plugins by copying directories from the qt installation
 	# One can cull what gets copied by using 'REGEX "..." EXCLUDE'
-	#INSTALL(DIRECTORY "${QT_PLUGINS_DIR}/imageformats" DESTINATION ${plugin_dest_dir}/plugins COMPONENT Runtime)
+	INSTALL(DIRECTORY "${QT_PLUGINS_DIR}/imageformats" DESTINATION ${plugin_dest_dir}/plugins COMPONENT Runtime)
 
 	#--------------------------------------------------------------------------------
 	# install a qt.conf file
 	# this inserts some cmake code into the install script to write the file
 	INSTALL(CODE "
-	file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")
+	file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"[Paths]\nPlugins = MacOS/plugins\")
 	" COMPONENT Runtime)
 
 	# install qt_menu.nib
