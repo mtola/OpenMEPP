@@ -232,6 +232,21 @@ if (CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND AND QGLVIEWER_FOUND AND XERCESC_FO
 	#endif(BUILD_doc_${PRJ_NAME})
 
 
+IF(WIN32)
+ #--------------------------------------------------------------------------------
+ # Copy Qt plugins to 'Debug and Release' directories and configure qt.conf file
+ #--------------------------------------------------------------------------------
+ file (GLOB qtplugin_dirs RELATIVE  "${QT_PLUGINS_DIR}"  "${QT_PLUGINS_DIR}/*"  )
+ file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/Debug/QtPlugins" )
+ file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/Release/QtPlugins" )
+ foreach (qtplugin ${qtplugin_dirs})
+	file(COPY "${QT_PLUGINS_DIR}/${qtplugin}" DESTINATION "${CMAKE_BINARY_DIR}/Debug/QtPlugins/")
+	file(COPY "${QT_PLUGINS_DIR}/${qtplugin}" DESTINATION "${CMAKE_BINARY_DIR}/Release/QtPlugins/")
+ endforeach ()
+ file(WRITE "@CMAKE_BINARY_DIR@/Debug/qt.conf" "[Paths]\nPlugins = QtPlugins")
+ file(WRITE "@CMAKE_BINARY_DIR@/Release/qt.conf" "[Paths]\nPlugins = QtPlugins")
+ENDIF(WIN32)
+
 IF(APPLE)
 	#--------------------------------------------------------------------------------
 	# Now the installation stuff : http://www.cmake.org/Wiki/BundleUtilitiesExample
