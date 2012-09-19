@@ -127,19 +127,21 @@ int main(int argc, char *argv[])
 	loadStyleSheet();
 	window.show();
 
-	OpenMesh::IO::Options opt1, opt2;
+	OpenMesh::IO::Options opt1; opt1 += OpenMesh::IO::Options::VertexTexCoord; opt1 += OpenMesh::IO::Options::VertexColor; opt1 += OpenMesh::IO::Options::FaceColor;
+	OpenMesh::IO::Options opt2; //opt2 += OpenMesh::IO::Options::VertexColor;
 
 	Mesh1 M1;
     //M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt1);
-	M1.open_mesh("C:\\Users\\noname\\Desktop\\rgb_monkey.obj", opt1);
+	//M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt1);
 	//M1.open_mesh("mesh_c.off", opt1);
-    //M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt1);
+	M1.open_mesh("C:\\Users\\noname\\Desktop\\_3dvia obj mepp_\\kip.obj\\kip_vt.ply", opt1);
+	//M1.open_mesh("C:\\Users\\noname\\Desktop\\meshes\\rgb_monkey.obj", opt1);
 	std::cout << "--> (vertices: " << M1.mesh().n_vertices() << " - faces: " << M1.mesh().n_faces() << " - edges: " << M1.mesh().n_edges() << ")\n\n";
 
 	Mesh2 M2;
     M2.open_mesh("C:\\Users\\noname\\Desktop\\face.obj\\face.obj", opt2);
-	//M2.open_mesh("mesh_t.off", opt2);
     //M2.open_mesh("/home/mepp/Desktop/face.obj/face.obj", opt2);
+	//M2.open_mesh("mesh_t.off", opt2);
 	std::cout << "--> (vertices: " << M2.mesh().n_vertices() << " - faces: " << M2.mesh().n_faces() << " - edges: " << M2.mesh().n_edges() << ")\n\n";
 
 	M1.open_texture("C:\\Users\\noname\\Desktop\\face.texture.ply\\face_skin_hi.bmp");
@@ -202,7 +204,7 @@ int main(int argc, char *argv[])
 
 	// ---
 
-	OpenMesh::IO::Options optw1; optw1 += OpenMesh::IO::Options::VertexColor;
+	OpenMesh::IO::Options optw1; if (M1b.mesh().has_vertex_colors()) optw1 += OpenMesh::IO::Options::VertexColor;
 	OpenMesh::IO::Options optw2;
 
 	std::cout << "--> Writing mesh\n";

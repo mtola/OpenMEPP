@@ -68,7 +68,7 @@ public:
                 if (mesh_.has_vertex_colors())
                 {
                         OpenMesh::Vec3uc uc = mesh_.color(vit);
-                        vertex->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha
+                        vertex->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha (colorA)
                 }
         }
 
@@ -95,7 +95,7 @@ public:
                 if (mesh_.has_face_colors())
                 {
                         OpenMesh::Vec3uc uc = mesh_.color(fIt);
-                        face->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha
+                        face->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha (colorA)
                 }
         }
 
@@ -182,7 +182,7 @@ public:
                     vh = importerOpenMesh.add_vertex(v);
 
                     if (p_.has_vertex_colors())
-                            mesh_.set_color(vh, OpenMesh::Vec3uc(vi->color(0)*255, vi->color(1)*255, vi->color(2)*255)); // TODO unsigned char and alpha
+                            mesh_.set_color(vh, OpenMesh::Vec3uc(vi->color(0)*255, vi->color(1)*255, vi->color(2)*255)); // TODO unsigned char and alpha (colorA)
             }
 
             // constructs an inverse index
@@ -210,7 +210,7 @@ public:
                     fh = importerOpenMesh.add_face(vhandles);
 
                     if (p_.has_face_colors())
-                            mesh_.set_color(fh, OpenMesh::Vec3uc(fi->color(0)*255, fi->color(1)*255, fi->color(2)*255)); // TODO unsigned char and alpha
+                            mesh_.set_color(fh, OpenMesh::Vec3uc(fi->color(0)*255, fi->color(1)*255, fi->color(2)*255)); // TODO unsigned char and alpha (colorA)
             }
                 
             // ---

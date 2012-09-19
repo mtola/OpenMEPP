@@ -128,7 +128,7 @@ Enriched_mesh<M>::open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
     else
       mesh_.release_vertex_colors();
 
-    if ( _opt.check( OpenMesh::IO::Options::FaceColor ) )
+    if ( opt_.check( OpenMesh::IO::Options::FaceColor ) )
     {
       std::cout << "File provides face colors\n";
       //add_draw_mode("Solid Colored Faces");
@@ -137,7 +137,7 @@ Enriched_mesh<M>::open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
     else
       mesh_.release_face_colors();
 
-    if ( _opt.check( OpenMesh::IO::Options::VertexTexCoord ) )
+    if ( opt_.check( OpenMesh::IO::Options::VertexTexCoord ) )
       std::cout << "File provides texture coordinates\n";
 
     // bounding box

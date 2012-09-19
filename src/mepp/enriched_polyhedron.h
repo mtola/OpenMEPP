@@ -123,14 +123,14 @@ private:
   int m_tag; 
 
   // option for edge superimposing
-  bool m_control_edge; 
+  //bool m_control_edge; 
 
 public:
 
   // life cycle
   Enriched_halfedge()
   {
-    m_control_edge = true;
+    //m_control_edge = true;
   }
 
   // tag
@@ -139,9 +139,9 @@ public:
   void tag(const int& t)  { m_tag = t; }
 
   // control edge 
-  bool& control_edge()  { return m_control_edge; }
-  const bool& control_edge()  const { return m_control_edge; }
-  void control_edge(const bool& flag) { m_control_edge  = flag; }
+  //bool& control_edge()  { return m_control_edge; }
+  //const bool& control_edge()  const { return m_control_edge; }
+  //void control_edge(const bool& flag) { m_control_edge  = flag; }
 };
 
 // a refined vertex with a normal and a tag
@@ -161,12 +161,15 @@ private:
 
 public:
   // life cycle
-  Enriched_vertex()  {}
+  Enriched_vertex()
+  {
+	color(0.5f, 0.5f, 0.5f);
+  }
+
   // repeat mandatory constructors
   Enriched_vertex(const P& pt)
     : CGAL::HalfedgeDS_vertex_base<Refs, T, P>(pt)
   {
-	color(0.5f, 0.5f, 0.5f);
   }
 
   // normal
