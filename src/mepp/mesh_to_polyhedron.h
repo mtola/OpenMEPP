@@ -44,7 +44,7 @@ template <class P, class HDS, class Mesh, class MyMesh>
 class Build_polyhedron : public CGAL::Modifier_base<HDS>
 {
 public:
-    Build_polyhedron(Mesh& _mesh, P& _p) : mesh_(_mesh.mesh()), p_(_p) {}
+    Build_polyhedron(Mesh& _mesh, P& _p) : mesh_(_mesh.mesh()), p_(_p) { p_.tex_id_ = _mesh.tex_id_; }
 
     void operator()(HDS& hds)
     {
@@ -69,6 +69,12 @@ public:
                 {
                         OpenMesh::Vec3uc uc = mesh_.color(vit);
                         vertex->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha (colorA)
+                }
+
+				if (mesh_.has_vertex_texcoords2D())
+                {
+                        OpenMesh::Vec2f tc = mesh_.texcoord2D(vit);
+                        vertex->texcoord2D(tc[0], tc[1]);
                 }
         }
 
@@ -121,7 +127,11 @@ public:
 			if (p_.has_face_colors())
 					std::cout << "Polyhedron provides face colors\n";
 
-			// TODO texture (VertexTexCoord)
+			// texture
+			if (mesh_.has_vertex_texcoords2D())
+					p_.has_vertex_texcoords2D(true);
+			if (p_.has_vertex_texcoords2D())
+					std::cout << "Polyhedron provides texture coordinates\n";
 
 			// bounding box
 			p_.compute_bounding_box();
@@ -183,6 +193,9 @@ public:
 
                     if (p_.has_vertex_colors())
                             mesh_.set_color(vh, OpenMesh::Vec3uc(vi->color(0)*255, vi->color(1)*255, vi->color(2)*255)); // TODO unsigned char and alpha (colorA)
+
+					if (p_.has_vertex_texcoords2D())
+                            mesh_.set_texcoord2D(vh, OpenMesh::Vec2f(vi->texcoord2D(0), vi->texcoord2D(1)));
             }
 
             // constructs an inverse index
@@ -231,7 +244,12 @@ public:
 				if (mesh_.has_face_colors())
 					std::cout << "Mesh provides face colors\n";
 			
-				// TODO texture (VertexTexCoord)
+				// texture
+				if (!p_.has_vertex_texcoords2D())
+					mesh_.release_vertex_texcoords2D();
+				if (mesh_.has_vertex_texcoords2D())
+					std::cout << "Mesh provides texture coordinates\n";
+				_mesh.tex_id_ = p_.tex_id_;
 
 				// bounding box
 				typename MyMesh::ConstVertexIter vIt(mesh_.vertices_begin());

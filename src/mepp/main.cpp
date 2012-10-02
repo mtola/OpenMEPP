@@ -204,16 +204,18 @@ int main(int argc, char *argv[])
 
 	// ---
 
-	OpenMesh::IO::Options optw1; if (M1b.mesh().has_vertex_colors()) optw1 += OpenMesh::IO::Options::VertexColor;
+	OpenMesh::IO::Options optw1;
 	OpenMesh::IO::Options optw2;
 
 	std::cout << "--> Writing mesh\n";
+	if (M1b.mesh().has_vertex_colors()) { optw1 += OpenMesh::IO::Options::VertexColor; std::cout << "Mesh provides vertex colors\n"; }
 	if (OpenMesh::IO::write_mesh(M1b.mesh(), "mesh_c.off", optw1))
 		std::cout << "--> Writing done\n\n";
 	else
 		std::cout << "--> Writing error\n\n";
 
 	std::cout << "--> Writing mesh\n";
+	if (M2b.mesh().has_vertex_texcoords2D()) { optw2 += OpenMesh::IO::Options::VertexTexCoord; std::cout << "Mesh provides texture coordinates\n"; }
 	if (OpenMesh::IO::write_mesh(M2b.mesh(), "mesh_t.off", optw2))
 		std::cout << "--> Writing done\n\n";
 	else

@@ -36,6 +36,8 @@
 #endif
 #include <GL/glu.h>
 
+#include <QGLWidget>
+
 // this needs to be done after all possible windows C header includes and before any Mepp components source includes
 // (system C++ includes are supposed to be able to deal with this already):
 // windows.h defines min and max macros which would make some Mepp components fail to compile.
@@ -78,8 +80,10 @@ private:
 
   OpenMesh::IO::Options opt_;
   Mesh mesh_;
-  
+
 public: // TODO temp !!!
+
+  GLuint tex_id_;
 
   OpenMesh::Vec3f bbMin, bbMax;
   float normal_scale_;
@@ -175,13 +179,71 @@ bool Enriched_mesh<M>::open_texture( const char *_filename )
 
    std::cout << "--> Loading texture from file '" << _filename << "'\n";
    if (texsrc.load( fname ))
-   {
-                std::cout << "--> Loading done\n\n";
-                return true;
-                //return set_texture( texsrc );
-   }
-   std::cout << "--> Loading NOT done!\n\n";
+	if (set_texture( texsrc ))
+	{
+		std::cout << "--> Texture loading done\n\n";
+		return true;
+	}
+
+   std::cout << "--> Texture loading NOT done!\n\n";
    return false;
+}
+
+template <typename M>
+bool Enriched_mesh<M>::set_texture( QImage& _texsrc )
+{
+  if ( !opt_.vertex_has_texcoord() )
+    return false;
+   
+  {
+    // adjust texture size: 2^k * 2^l
+    int tex_w, w( _texsrc.width()  );
+    int tex_h, h( _texsrc.height() );
+
+    for (tex_w=1; tex_w <= w; tex_w <<= 1) {};
+    for (tex_h=1; tex_h <= h; tex_h <<= 1) {};
+    tex_w >>= 1;
+    tex_h >>= 1;
+    _texsrc = _texsrc.scaled( tex_w, tex_h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
+  }
+
+  QImage texture( QGLWidget::convertToGLFormat ( _texsrc ) );
+  
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glPixelStorei(GL_UNPACK_SKIP_ROWS,   0);
+  glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+  glPixelStorei(GL_UNPACK_ALIGNMENT,   1);
+  glPixelStorei(GL_PACK_ROW_LENGTH,    0);
+  glPixelStorei(GL_PACK_SKIP_ROWS,     0);
+  glPixelStorei(GL_PACK_SKIP_PIXELS,   0);
+  glPixelStorei(GL_PACK_ALIGNMENT,     1);    
+  
+  if ( tex_id_ > 0 )
+  {
+    glDeleteTextures(1, &tex_id_);
+  }
+  glGenTextures(1, &tex_id_);
+  glBindTexture(GL_TEXTURE_2D, tex_id_);
+    
+  // glTexGenfv( GL_S, GL_SPHERE_MAP, 0 );
+  // glTexGenfv( GL_T, GL_SPHERE_MAP, 0 );
+    
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);      
+  
+  glTexImage2D(GL_TEXTURE_2D,       // target
+	       0,                   // level
+	       GL_RGBA,             // internal format
+	       texture.width(),     // width  (2^n)
+	       texture.height(),    // height (2^m)
+	       0,                   // border
+	       GL_RGBA,             // format
+	       GL_UNSIGNED_BYTE,    // type
+	       texture.bits() );    // pointer to pixels
+
+  return true;
 }
 
 #endif // _ENRICHED_MESH_

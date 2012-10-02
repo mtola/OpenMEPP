@@ -159,11 +159,15 @@ private:
   // color
   float m_color[3];
 
+  // texture
+  float m_texture_coordinates[2];
+
 public:
   // life cycle
   Enriched_vertex()
   {
 	color(0.5f, 0.5f, 0.5f);
+	texcoord2D(0.f, 0.f);
   }
 
   // repeat mandatory constructors
@@ -185,6 +189,10 @@ public:
   // color
   float color(int index) { return m_color[index]; }
   void color(float r, float g, float b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
+
+  // texture
+  float texcoord2D(int index) { return m_texture_coordinates[index]; }
+  void texcoord2D(float u, float v) { m_texture_coordinates[0] = u; m_texture_coordinates[1] = v; }
 };
 
 // A redefined items class for the Polyhedron_3 
@@ -275,7 +283,12 @@ private :
   bool m_vertex_color;
   bool m_face_color;
 
+  // texture
+  bool m_vertex_texcoords2D;
+
 public: // TODO temp !!!
+
+  GLuint tex_id_;
 
   Vector bbMin, bbMax;
   float normal_scale_;
@@ -295,6 +308,9 @@ public :
 	m_vertex_color = false;
     m_face_color = false;
 
+	// texture
+	m_vertex_texcoords2D = false;
+
 	normal_scale_ = radius_ = 0.;
   }
   virtual ~Enriched_polyhedron() 
@@ -309,8 +325,12 @@ public :
   bool has_vertex_colors() { return m_vertex_color; }
   bool has_face_colors() { return m_face_color; }
 
-  void has_vertex_colors(const bool& flag) { m_vertex_color  = flag; }
-  void has_face_colors(const bool& flag) { m_face_color  = flag; }
+  void has_vertex_colors(const bool& flag) { m_vertex_color = flag; }
+  void has_face_colors(const bool& flag) { m_face_color = flag; }
+
+  // texture
+  bool has_vertex_texcoords2D() { return m_vertex_texcoords2D; }
+  void has_vertex_texcoords2D(const bool& flag) { m_vertex_texcoords2D = flag; }
 
   // normals (per facet, then per vertex)
   void compute_normals_per_facet()
