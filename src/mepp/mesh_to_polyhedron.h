@@ -2,7 +2,7 @@
  * \file mesh_to_polyhedron.h
  * \brief Class: Build_polyhedron and Build_mesh.
  * \author Martial TOLA, CNRS-Lyon, LIRIS UMR 5205
- * \date 2012
+ * \date 2013
  */
 
 #ifndef _MESH_TO_POLYHEDRON_
@@ -44,7 +44,7 @@ template <class P, class HDS, class Mesh, class MyMesh>
 class Build_polyhedron : public CGAL::Modifier_base<HDS>
 {
 public:
-    Build_polyhedron(Mesh& _mesh, P& _p) : mesh_(_mesh.mesh()), p_(_p) { p_.tex_id_ = _mesh.tex_id_; }
+    Build_polyhedron(Mesh& _mesh, P& _p) : mesh_(_mesh.mesh()), p_(_p) { p_.tex_id(_mesh.tex_id()); }
 
     void operator()(HDS& hds)
     {
@@ -68,7 +68,7 @@ public:
                 if (mesh_.has_vertex_colors())
                 {
                         OpenMesh::Vec3uc uc = mesh_.color(vit);
-                        vertex->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha (colorA)
+                        vertex->color(/*(float)*/uc[0]/*/255.0*/, /*(float)*/uc[1]/*/255.0*/, /*(float)*/uc[2]/*/255.0*/); // TODO alpha (colorA)
                 }
 
 				if (mesh_.has_vertex_texcoords2D())
@@ -101,7 +101,7 @@ public:
                 if (mesh_.has_face_colors())
                 {
                         OpenMesh::Vec3uc uc = mesh_.color(fIt);
-                        face->color((float)uc[0]/255.0, (float)uc[1]/255.0, (float)uc[2]/255.0); // TODO unsigned char and alpha (colorA)
+                        face->color(/*(float)*/uc[0]/*/255.0*/, /*(float)*/uc[1]/*/255.0*/, /*(float)*/uc[2]/*/255.0*/); // TODO alpha (colorA)
                 }
         }
 
@@ -137,12 +137,12 @@ public:
 			p_.compute_bounding_box();
 
 			// set center and radius ( set_scene_pos( , ) )
-			p_.center_ = (p_.bbMin + p_.bbMax)*0.5;
-			p_.radius_ = std::sqrt( ::CGAL::to_double( (p_.bbMin - p_.bbMax).squared_length() ) )*0.5;
+			p_.center( (p_.bbMin() + p_.bbMax())*0.5 );
+			p_.radius( std::sqrt( ::CGAL::to_double( (p_.bbMin() - p_.bbMax()).squared_length() ) )*0.5 );
                 
 			// set normal scale for normal display
-			typename P::Vector diff = p_.bbMax - p_.bbMin;
-			p_.normal_scale_ = ::CGAL::to_double( ::CGAL::min( ::CGAL::min(diff[0], diff [1]), diff[2] ) )*0.05f;
+			typename P::Vector diff = p_.bbMax() - p_.bbMin();
+			p_.normal_scale( ::CGAL::to_double( ::CGAL::min( ::CGAL::min(diff[0], diff [1]), diff[2] ) )*0.05f );
 
 			// TODO set base point for displaying face normals
 		}
@@ -192,7 +192,7 @@ public:
                     vh = importerOpenMesh.add_vertex(v);
 
                     if (p_.has_vertex_colors())
-                            mesh_.set_color(vh, OpenMesh::Vec3uc(vi->color(0)*255, vi->color(1)*255, vi->color(2)*255)); // TODO unsigned char and alpha (colorA)
+                            mesh_.set_color(vh, OpenMesh::Vec3uc(vi->color(0)/**255*/, vi->color(1)/**255*/, vi->color(2)/**255*/)); // TODO alpha (colorA)
 
 					if (p_.has_vertex_texcoords2D())
                             mesh_.set_texcoord2D(vh, OpenMesh::Vec2f(vi->texcoord2D(0), vi->texcoord2D(1)));
@@ -223,7 +223,7 @@ public:
                     fh = importerOpenMesh.add_face(vhandles);
 
                     if (p_.has_face_colors())
-                            mesh_.set_color(fh, OpenMesh::Vec3uc(fi->color(0)*255, fi->color(1)*255, fi->color(2)*255)); // TODO unsigned char and alpha (colorA)
+                            mesh_.set_color(fh, OpenMesh::Vec3uc(fi->color(0)/**255*/, fi->color(1)/**255*/, fi->color(2)/**255*/)); // TODO alpha (colorA)
             }
                 
             // ---
@@ -249,26 +249,26 @@ public:
 					mesh_.release_vertex_texcoords2D();
 				if (mesh_.has_vertex_texcoords2D())
 					std::cout << "Mesh provides texture coordinates\n";
-				_mesh.tex_id_ = p_.tex_id_;
+				_mesh.tex_id(p_.tex_id());
 
 				// bounding box
 				typename MyMesh::ConstVertexIter vIt(mesh_.vertices_begin());
 				typename MyMesh::ConstVertexIter vEnd(mesh_.vertices_end());
 
-				_mesh.bbMin = _mesh.bbMax = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
+				_mesh.bbMin( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) ); _mesh.bbMax( _mesh.bbMin() );
                 
 				for (size_t count=0; vIt!=vEnd; ++vIt, ++count)
 				{
-					_mesh.bbMin.minimize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
-					_mesh.bbMax.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
+					_mesh.bbMin().minimize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
+					_mesh.bbMax().maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
 				}
                     
 				// set center and radius ( set_scene_pos( , ) )
-				_mesh.center_ = (_mesh.bbMin + _mesh.bbMax)*0.5;
-				_mesh.radius_ = (_mesh.bbMin - _mesh.bbMax).norm()*0.5;
+				_mesh.center( (_mesh.bbMin() + _mesh.bbMax())*0.5 );
+				_mesh.radius( (_mesh.bbMin() - _mesh.bbMax()).norm()*0.5 );
                 
 				// set normal scale for normal display
-				_mesh.normal_scale_ = (_mesh.bbMax - _mesh.bbMin).min()*0.05f;
+				_mesh.normal_scale( (_mesh.bbMax() - _mesh.bbMin()).min()*0.05f );
 
 				// TODO set base point for displaying face normals
 			}

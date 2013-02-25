@@ -99,7 +99,19 @@ typedef CGAL::Simple_cartesian<float>					Kernel1;
 typedef Enriched_polyhedron<Kernel1, Enriched_items>	Polyhedron1;
 typedef Polyhedron1::HalfedgeDS							HalfedgeDS1;
 
+// kernel
+//#define _KERNEL_EXACT_
+
+#ifdef _KERNEL_EXACT_
+#include <CGAL/Gmpq.h>
+#include <CGAL/Lazy_exact_nt.h>
+
+typedef CGAL::Gmpq										CGAL_Gmpq;
+typedef CGAL::Lazy_exact_nt<CGAL_Gmpq>					EX_MM_Number_type;
+typedef CGAL::Simple_cartesian<EX_MM_Number_type>		Kernel2;
+#else
 typedef CGAL::Simple_cartesian<double>					Kernel2;
+#endif
 //typedef CGAL::Polyhedron_3<Kernel2>						Polyhedron2;
 typedef Enriched_polyhedron<Kernel2, Enriched_items>	Polyhedron2;
 typedef Polyhedron2::HalfedgeDS							HalfedgeDS2;
@@ -127,15 +139,15 @@ int main(int argc, char *argv[])
 	loadStyleSheet();
 	window.show();
 
-	OpenMesh::IO::Options opt1; opt1 += OpenMesh::IO::Options::VertexTexCoord; opt1 += OpenMesh::IO::Options::VertexColor; opt1 += OpenMesh::IO::Options::FaceColor;
-	OpenMesh::IO::Options opt2; //opt2 += OpenMesh::IO::Options::VertexColor;
+	OpenMesh::IO::Options opt1; opt1 += OpenMesh::IO::Options::VertexTexCoord; opt1 += OpenMesh::IO::Options::VertexColor; /*opt1 += OpenMesh::IO::Options::FaceColor*/;
+	OpenMesh::IO::Options opt2; opt2 += OpenMesh::IO::Options::VertexTexCoord; opt2 += OpenMesh::IO::Options::VertexColor; /*opt2 += OpenMesh::IO::Options::FaceColor*/;
 
 	Mesh1 M1;
     //M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt1);
 	//M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt1);
 	//M1.open_mesh("mesh_c.off", opt1);
-	M1.open_mesh("C:\\Users\\noname\\Desktop\\_3dvia obj mepp_\\kip.obj\\kip_vt.ply", opt1);
-	//M1.open_mesh("C:\\Users\\noname\\Desktop\\meshes\\rgb_monkey.obj", opt1);
+	//M1.open_mesh("C:\\Users\\noname\\Desktop\\_3dvia obj mepp_\\kip.obj\\kip_vt.ply", opt1);
+	M1.open_mesh("C:\\Users\\noname\\Desktop\\meshes\\rgb_monkey.obj", opt1);
 	std::cout << "--> (vertices: " << M1.mesh().n_vertices() << " - faces: " << M1.mesh().n_faces() << " - edges: " << M1.mesh().n_edges() << ")\n\n";
 
 	Mesh2 M2;
@@ -172,13 +184,13 @@ int main(int argc, char *argv[])
 	Polyhedron1 P1;
     Build_polyhedron<Polyhedron1, HalfedgeDS1, Mesh1, MyMesh1> build_polyhedron1(M1, P1);
     P1.delegate(build_polyhedron1);
-	std::cout << "--> (vertices: " << P1.size_of_vertices() << " - faces: " << P1.size_of_facets() << " - edges: " << (P1.size_of_halfedges() >> 1) << " - radius: " << P1.radius_ << " - n_scale: " << P1.normal_scale_ << ")\n\n";
+	std::cout << "--> (vertices: " << P1.size_of_vertices() << " - faces: " << P1.size_of_facets() << " - edges: " << (P1.size_of_halfedges() >> 1) << " - radius: " << P1.radius() << " - n_scale: " << P1.normal_scale() << ")\n\n";
 
 	std::cout << "--> OpenMeshToCGALConverter\n";
 	Polyhedron2 P2;
     Build_polyhedron<Polyhedron2, HalfedgeDS2, Mesh2, MyMesh2> build_polyhedron2(M2, P2);
     P2.delegate(build_polyhedron2);
-	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << " - radius: " << P2.radius_ << " - n_scale: " << P2.normal_scale_ << ")\n\n";
+	std::cout << "--> (vertices: " << P2.size_of_vertices() << " - faces: " << P2.size_of_facets() << " - edges: " << (P2.size_of_halfedges() >> 1) << " - radius: " << P2.radius() << " - n_scale: " << P2.normal_scale() << ")\n\n";
 
 	// ---
 
@@ -192,13 +204,13 @@ int main(int argc, char *argv[])
 	Mesh1 M1b;
 	Build_mesh<Mesh1, MyMesh1, Polyhedron1> build_mesh1b(P1);
 	build_mesh1b.build(M1b);
-	std::cout << "--> (vertices: " << M1b.mesh().n_vertices() << " - faces: " << M1b.mesh().n_faces() << " - edges: " << M1b.mesh().n_edges() << " - radius: " << M1b.radius_ << " - n_scale: " << M1b.normal_scale_ << ")\n\n";
+	std::cout << "--> (vertices: " << M1b.mesh().n_vertices() << " - faces: " << M1b.mesh().n_faces() << " - edges: " << M1b.mesh().n_edges() << " - radius: " << M1b.radius() << " - n_scale: " << M1b.normal_scale() << ")\n\n";
 
 	std::cout << "--> CGALToOpenMeshConverter\n";
 	Mesh2 M2b;
 	Build_mesh<Mesh2, MyMesh2, Polyhedron2> build_mesh2b(P2);
 	build_mesh2b.build(M2b);
-	std::cout << "--> (vertices: " << M2b.mesh().n_vertices() << " - faces: " << M2b.mesh().n_faces() << " - edges: " << M2b.mesh().n_edges() << " - radius: " << M2b.radius_ << " - n_scale: " << M2b.normal_scale_ << ")\n\n";
+	std::cout << "--> (vertices: " << M2b.mesh().n_vertices() << " - faces: " << M2b.mesh().n_faces() << " - edges: " << M2b.mesh().n_edges() << " - radius: " << M2b.radius() << " - n_scale: " << M2b.normal_scale() << ")\n\n";
 
 	//return app.exec();
 
@@ -209,12 +221,16 @@ int main(int argc, char *argv[])
 
 	std::cout << "--> Writing mesh\n";
 	if (M1b.mesh().has_vertex_colors()) { optw1 += OpenMesh::IO::Options::VertexColor; std::cout << "Mesh provides vertex colors\n"; }
+	if (M1b.mesh().has_face_colors()) { optw1 += OpenMesh::IO::Options::FaceColor; std::cout << "Mesh provides face colors\n"; }
+	if (M1b.mesh().has_vertex_texcoords2D()) { optw1 += OpenMesh::IO::Options::VertexTexCoord; std::cout << "Mesh provides texture coordinates\n"; }
 	if (OpenMesh::IO::write_mesh(M1b.mesh(), "mesh_c.off", optw1))
 		std::cout << "--> Writing done\n\n";
 	else
 		std::cout << "--> Writing error\n\n";
 
 	std::cout << "--> Writing mesh\n";
+	if (M2b.mesh().has_vertex_colors()) { optw2 += OpenMesh::IO::Options::VertexColor; std::cout << "Mesh provides vertex colors\n"; }
+	if (M2b.mesh().has_face_colors()) { optw2 += OpenMesh::IO::Options::FaceColor; std::cout << "Mesh provides face colors\n"; }
 	if (M2b.mesh().has_vertex_texcoords2D()) { optw2 += OpenMesh::IO::Options::VertexTexCoord; std::cout << "Mesh provides texture coordinates\n"; }
 	if (OpenMesh::IO::write_mesh(M2b.mesh(), "mesh_t.off", optw2))
 		std::cout << "--> Writing done\n\n";

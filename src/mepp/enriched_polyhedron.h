@@ -2,7 +2,7 @@
  * \file enriched_polyhedron.h
  * \brief Class: Enriched_polyhedron.
  * \author Le-Jeng Shiue, Pierre Alliez, Radu Ursu, Lutz Kettner and Martial TOLA, CNRS-Lyon, LIRIS UMR 5205
- * \date 2004-2012
+ * \date 2004-2013
  */
 
 #ifndef _ENRICHED_POLYHEDRON_
@@ -20,8 +20,6 @@
 #endif
 #include <GL/glu.h>
 
-// TODO ::CGAL::to_double
-
 // compute facet normal 
 struct Facet_normal // (functor)
 {
@@ -35,13 +33,13 @@ struct Facet_normal // (functor)
       typename Facet::Normal_3 normal = CGAL::cross_product(
         h->next()->vertex()->point() - h->vertex()->point(),
         h->next()->next()->vertex()->point() - h->next()->vertex()->point());
-      double sqnorm = normal * normal;
+      double sqnorm = CGAL::to_double(normal * normal);
       if(sqnorm != 0)
         normal = normal / (float)std::sqrt(sqnorm);
       sum = sum + normal;
     }
     while(++h != f.facet_begin());
-    float sqnorm = sum * sum;
+    double sqnorm = CGAL::to_double(sum * sum);
     if(sqnorm != 0.0)
       f.normal() = sum / std::sqrt(sqnorm);
     else
@@ -64,7 +62,7 @@ struct Vertex_normal // (functor)
         CGAL_For_all(pHalfedge,begin) 
           if(!pHalfedge->is_border())
             normal = normal + pHalfedge->facet()->normal();
-        float sqnorm = normal * normal;
+        double sqnorm = CGAL::to_double(normal * normal);
         if(sqnorm != 0.0f)
           v.normal() = normal / (float)std::sqrt(sqnorm);
         else
@@ -85,7 +83,7 @@ private:
   Norm m_normal;
 
   // color
-  float m_color[3];
+  unsigned char m_color[3];
 
 public:
 
@@ -94,11 +92,11 @@ public:
   // default constructor mandatory
   Enriched_facet()
   {
-	color(0.5f, 0.5f, 0.5f);
+	color(127/*0.5f*/, 127/*0.5f*/, 127/*0.5f*/);
   }
 
   // tag
-  const int&  tag() { return m_tag; }
+  const int& tag() { return m_tag; }
   void tag(const int& t)  { m_tag = t; }
 
   // normal
@@ -107,8 +105,8 @@ public:
   const Normal_3& normal() const { return m_normal; }
 
   // color
-  float color(int index) { return m_color[index]; }
-  void color(float r, float g, float b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
+  unsigned char color(int index) { return m_color[index]; }
+  void color(unsigned char r, unsigned char g, unsigned char b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
 };
 
 // a refined halfedge with a general tag and 
@@ -157,7 +155,7 @@ private:
   Norm m_normal;
 
   // color
-  float m_color[3];
+  unsigned char m_color[3];
 
   // texture
   float m_texture_coordinates[2];
@@ -166,7 +164,7 @@ public:
   // life cycle
   Enriched_vertex()
   {
-	color(0.5f, 0.5f, 0.5f);
+	color(127/*0.5f*/, 127/*0.5f*/, 127/*0.5f*/);
 	texcoord2D(0.f, 0.f);
   }
 
@@ -187,8 +185,8 @@ public:
   void tag(const int& t)  { m_tag = t; }
 
   // color
-  float color(int index) { return m_color[index]; }
-  void color(float r, float g, float b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
+  unsigned char color(int index) { return m_color[index]; }
+  void color(unsigned char r, unsigned char g, unsigned char b) { m_color[0] = r; m_color[1] = g; m_color[2] = b; }
 
   // texture
   float texcoord2D(int index) { return m_texture_coordinates[index]; }
@@ -286,11 +284,11 @@ private :
   // texture
   bool m_vertex_texcoords2D;
 
-public: // TODO temp !!!
+private:
 
   GLuint tex_id_;
 
-  Vector bbMin, bbMax;
+  Vector bbMin_, bbMax_;
   float normal_scale_;
 
   Vector center_;
@@ -331,6 +329,24 @@ public :
   // texture
   bool has_vertex_texcoords2D() { return m_vertex_texcoords2D; }
   void has_vertex_texcoords2D(const bool& flag) { m_vertex_texcoords2D = flag; }
+
+  GLuint& tex_id() { return tex_id_; }
+  void tex_id(GLuint t) { tex_id_ = t; }
+
+  // ---
+  Vector& bbMin() { return bbMin_; }
+  void bbMin(OpenMesh::Vec3f min) { bbMin_ = min; }
+
+  Vector& bbMax() { return bbMax_; }
+  void bbMax(OpenMesh::Vec3f max) { bbMax_ = max; }
+
+  float& normal_scale() { return normal_scale_; }
+  void normal_scale(float n) { normal_scale_ = n; }
+
+  void center(Vector c) { center_ = c; }
+
+  float& radius() { return radius_; }
+  void radius(float r) { radius_ = r; }
 
   // normals (per facet, then per vertex)
   void compute_normals_per_facet()
@@ -382,8 +398,8 @@ public :
     m_bbox = Iso_cuboid(xmin,ymin,zmin,
                         xmax,ymax,zmax);
 
-	bbMin = Vector(xmin,ymin,zmin);
-	bbMax = Vector(xmax,ymax,zmax);
+	bbMin_ = Vector(xmin,ymin,zmin);
+	bbMax_ = Vector(xmax,ymax,zmax);
   }
 
   // bounding box
@@ -510,7 +526,7 @@ public :
     {
       Vector vec = pHalfEdge->vertex()->point()-
                    pHalfEdge->opposite()->vertex()->point();
-      sum += std::sqrt(vec*vec);
+      sum += std::sqrt(CGAL::to_double(vec*vec));
       degree++;
     }
     return sum / (FT) degree;
@@ -540,7 +556,7 @@ public :
     if(use_normals && !smooth_shading)
     {
       const /*Facet::*/Normal/*_3*/& normal = pFacet->normal();
-      ::glNormal3f(normal[0],normal[1],normal[2]);
+      ::glNormal3d(CGAL::to_double(normal[0]),CGAL::to_double(normal[1]),CGAL::to_double(normal[2]));
     }
 
     // revolve around current face to get vertices
@@ -551,12 +567,12 @@ public :
       if(use_normals && smooth_shading)
       {
         const /*Facet::*/Normal/*_3*/& normal = pHalfedge->vertex()->normal();
-        ::glNormal3f(normal[0],normal[1],normal[2]);
+        ::glNormal3d(CGAL::to_double(normal[0]),CGAL::to_double(normal[1]),CGAL::to_double(normal[2]));
       }
 
       // polygon assembly is performed per vertex
       const Point& point  = pHalfedge->vertex()->point();
-      ::glVertex3d(point[0],point[1],point[2]);
+      ::glVertex3d(CGAL::to_double(point[0]),CGAL::to_double(point[1]),CGAL::to_double(point[2]));
     }
     while(++pHalfedge != pFacet->facet_begin());
   }
@@ -592,21 +608,21 @@ public :
 
         kernel k;
         Point d1 = k.construct_circumcenter_3_object()(p1,p2,p3);
-        ::glVertex3f(d1[0],d1[1],d1[2]);
+        ::glVertex3d(CGAL::to_double(d1[0]),CGAL::to_double(d1[1]),CGAL::to_double(d1[2]));
 
         const Point &pp1 = h->opposite()->vertex()->point();
         const Point &pp2 = h->opposite()->next()->vertex()->point();
         const Point &pp3 = h->opposite()->next()->next()->vertex()->point();
         Point d2 = k.construct_circumcenter_3_object()(pp1,pp2,pp3);
-        ::glVertex3f(d2[0],d2[1],d2[2]);
+        ::glVertex3d(CGAL::to_double(d2[0]),CGAL::to_double(d2[1]),CGAL::to_double(d2[2]));
       }
       else
       {
         // assembly and draw line segment
         const Point& p1 = h->prev()->vertex()->point();
         const Point& p2 = h->vertex()->point();
-        ::glVertex3f(p1[0],p1[1],p1[2]);
-        ::glVertex3f(p2[0],p2[1],p2[2]);
+        ::glVertex3d(CGAL::to_double(p1[0]),CGAL::to_double(p1[1]),CGAL::to_double(p1[2]));
+        ::glVertex3d(CGAL::to_double(p2[0]),CGAL::to_double(p2[1]),CGAL::to_double(p2[2]));
       }
     }
     ::glEnd();
@@ -619,7 +635,7 @@ public :
     for(Point_iterator pPoint = this->points_begin();
         pPoint != this->points_end();
         pPoint++)
-      ::glVertex3f(pPoint->x(),pPoint->y(),pPoint->z());
+      ::glVertex3d(CGAL::to_double(pPoint->x()),CGAL::to_double(pPoint->y()),CGAL::to_double(pPoint->z()));
     ::glEnd(); // // end point assembly
   }
 
@@ -634,10 +650,10 @@ public :
         pVertex++)
     {
       ::glPushMatrix();
-      double radius = average_edge_length_around(pVertex);
-      ::glTranslatef(pVertex->point().x(),
-                     pVertex->point().y(),
-                     pVertex->point().z());
+      double radius = CGAL::to_double(average_edge_length_around(pVertex));
+      ::glTranslated(CGAL::to_double(pVertex->point().x()),
+                     CGAL::to_double(pVertex->point().y()),
+                     CGAL::to_double(pVertex->point().z()));
       ::gluSphere(pQuadric,scale*radius,24,24); 
       ::glPopMatrix();
     }
@@ -656,7 +672,7 @@ public :
         pPoint++) 
       stream << 'v' << ' ' << pPoint->x() << ' ' <<
                               pPoint->y() << ' ' <<
-                              pPoint->z() << std::endl;
+                              pPoint->z() << std::endl;		// CGAL::to_double here ???
 
     // precompute vertex indices
     this->set_index_vertices(); 
@@ -680,35 +696,35 @@ public :
   {
     ::glBegin(GL_LINES);
 
-      // along x axis
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymin(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymin(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymin(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymin(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymax(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymax(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymax(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymax(),m_bbox.zmax());
+	// along x axis
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymin()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymin()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymin()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymin()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymax()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymax()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymax()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymax()),to_double(m_bbox.zmax()));
 
-      // along y axis
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymin(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymax(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymin(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymax(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymin(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymax(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymin(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymax(),m_bbox.zmax());
+	// along y axis
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymin()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymax()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymin()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymax()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymin()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymax()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymin()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymax()),to_double(m_bbox.zmax()));
 
-      // along z axis
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymin(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymin(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymax(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmin(),m_bbox.ymax(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymin(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymin(),m_bbox.zmax());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymax(),m_bbox.zmin());
-      ::glVertex3f(m_bbox.xmax(),m_bbox.ymax(),m_bbox.zmax());
+	// along z axis
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymin()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymin()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymax()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmin()),to_double(m_bbox.ymax()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymin()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymin()),to_double(m_bbox.zmax()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymax()),to_double(m_bbox.zmin()));
+	::glVertex3d(to_double(m_bbox.xmax()),to_double(m_bbox.ymax()),to_double(m_bbox.zmax()));
 
     ::glEnd();
   }

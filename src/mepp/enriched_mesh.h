@@ -2,7 +2,7 @@
  * \file enriched_mesh.h
  * \brief Class: Enriched_mesh.
  * \author Martial TOLA, CNRS-Lyon, LIRIS UMR 5205
- * \date 2012
+ * \date 2013
  */
 
 #ifndef _ENRICHED_MESH_
@@ -76,16 +76,35 @@ public:
   Mesh& mesh() { return mesh_; }
   const Mesh& mesh() const { return mesh_; }
 
+  // texture
+  GLuint& tex_id() { return tex_id_; }
+  void tex_id(GLuint t) { tex_id_ = t; }
+
+  // ---
+  OpenMesh::Vec3f& bbMin() { return bbMin_; }
+  void bbMin(OpenMesh::Vec3f min) { bbMin_ = min; }
+
+  OpenMesh::Vec3f& bbMax() { return bbMax_; }
+  void bbMax(OpenMesh::Vec3f max) { bbMax_ = max; }
+
+  float& normal_scale() { return normal_scale_; }
+  void normal_scale(float n) { normal_scale_ = n; }
+
+  void center(OpenMesh::Vec3f c) { center_ = c; }
+
+  float& radius() { return radius_; }
+  void radius(float r) { radius_ = r; }
+
 private:
 
   OpenMesh::IO::Options opt_;
   Mesh mesh_;
 
-public: // TODO temp !!!
+private:
 
   GLuint tex_id_;
 
-  OpenMesh::Vec3f bbMin, bbMax;
+  OpenMesh::Vec3f bbMin_, bbMax_;
   float normal_scale_;
 
   OpenMesh::Vec3f center_;
@@ -122,7 +141,6 @@ Enriched_mesh<M>::open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
     else
       std::cout << "File provides vertex normals\n";
 
-
     // check for possible color information
     if ( opt_.check( OpenMesh::IO::Options::VertexColor ) )
     {
@@ -143,25 +161,27 @@ Enriched_mesh<M>::open_mesh(const char* _filename, OpenMesh::IO::Options _opt)
 
     if ( opt_.check( OpenMesh::IO::Options::VertexTexCoord ) )
       std::cout << "File provides texture coordinates\n";
+	else
+      mesh_.release_vertex_texcoords2D();
 
     // bounding box
     typename Mesh::ConstVertexIter vIt(mesh_.vertices_begin());
     typename Mesh::ConstVertexIter vEnd(mesh_.vertices_end());
 
-    bbMin = bbMax = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
+    bbMin_ = bbMax_ = OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt));
     
     for (size_t count=0; vIt!=vEnd; ++vIt, ++count)
     {
-      bbMin.minimize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
-      bbMax.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
+      bbMin_.minimize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
+      bbMax_.maximize( OpenMesh::vector_cast<OpenMesh::Vec3f>(mesh_.point(vIt)) );
     }
         
     // set center and radius ( set_scene_pos( , ) )
-    center_ = (bbMin+bbMax)*0.5;
-    radius_ = (bbMin-bbMax).norm()*0.5;
+    center_ = (bbMin_+bbMax_)*0.5;
+    radius_ = (bbMin_-bbMax_).norm()*0.5;
     
     // for normal display
-    normal_scale_ = (bbMax-bbMin).min()*0.05f;
+    normal_scale_ = (bbMax_-bbMin_).min()*0.05f;
 
     // loading done
     std::cout << "--> Loading done\n\n";
