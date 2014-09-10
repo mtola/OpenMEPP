@@ -214,7 +214,7 @@ if (CGAL_FOUND AND QT4_FOUND AND OPENGL_FOUND AND QGLVIEWER_FOUND AND XERCESC_FO
 	
 	# Link with OpenMesh
 	if (OPENMESH_FOUND)
-		target_link_libraries( ${PRJ_NAME} ${OPENMESH_LIBRARY} )
+		target_link_libraries( ${PRJ_NAME} ${OPENMESH_LIBRARIES} )
 	endif (OPENMESH_FOUND)
 	
 	if (GLEW_FOUND)

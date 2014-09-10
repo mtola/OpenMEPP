@@ -143,11 +143,11 @@ int main(int argc, char *argv[])
 	OpenMesh::IO::Options opt2; opt2 += OpenMesh::IO::Options::VertexTexCoord; opt2 += OpenMesh::IO::Options::VertexColor; /*opt2 += OpenMesh::IO::Options::FaceColor*/;
 
 	Mesh1 M1;
-    //M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt1);
+    M1.open_mesh("C:\\Users\\noname\\Desktop\\face.texture.ply\\face.ply", opt1);
 	//M1.open_mesh("/home/mepp/Desktop/face.texture.ply/face.ply", opt1);
 	//M1.open_mesh("mesh_c.off", opt1);
 	//M1.open_mesh("C:\\Users\\noname\\Desktop\\_3dvia obj mepp_\\kip.obj\\kip_vt.ply", opt1);
-	M1.open_mesh("C:\\Users\\noname\\Desktop\\meshes\\rgb_monkey.obj", opt1);
+	//M1.open_mesh("C:\\Users\\noname\\Desktop\\meshes\\rgb_monkey.obj", opt1);
 	std::cout << "--> (vertices: " << M1.mesh().n_vertices() << " - faces: " << M1.mesh().n_faces() << " - edges: " << M1.mesh().n_edges() << ")\n\n";
 
 	Mesh2 M2;
